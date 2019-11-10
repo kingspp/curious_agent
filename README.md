@@ -1,7 +1,7 @@
 # Curious Agent
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=plastic)](CONTRIBUTING.md)
 [![License](https://img.shields.io/github/license/mashape/apistatus.svg)](https://opensource.org/licenses/mit)
-![completion](https://img.shields.io/badge/completion%20state-10%00-blue.svg?style=plastic)
+![completion](https://img.shields.io/badge/completion%20state-10%25-blue.svg?style=plastic)
 
 large-scale-curiosity implementation and improvements-
 
