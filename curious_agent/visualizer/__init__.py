@@ -7,17 +7,18 @@
 .. moduleauthor:: Sinan Morcel <shmorcel@wpi.edu>
 """
 
-
+from abc import abstractmethod
 from typeguard import typechecked
 import numpy as np
 
 
-class Visualizer:
+class Visualizer(object):
     """Class defining shared functionality that environments have to implement to visualize the state
 
     This class is meant to define an interface that accepts OpenAI state-types.
 
     """
+    @abstractmethod
     @typechecked
     def show_state(self, state: np.ndarray):
         """A method that displays the state for the purpose of agent-performance auditing.
