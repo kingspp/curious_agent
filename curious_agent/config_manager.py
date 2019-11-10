@@ -20,8 +20,8 @@ from typing import Union
 import logging
 import json
 from . import setup_logging
-from module import Singleton
-from module import string_constants as constants
+from curious_agent import Singleton
+from curious_agent import string_constants as constants
 
 logger = logging.getLogger(__name__)
 

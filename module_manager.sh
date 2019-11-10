@@ -18,12 +18,12 @@
 DEBUG=true
 PYTHON_COMMAND=python3
 PYTHON_PIP=pip3
-PROJECT_NAME=module
-PACKAGE_NAME=module
-MODULE_DOCS_PATH=`pwd`/../module-docs/
+PROJECT_NAME=curious_agent
+PACKAGE_NAME=curious_agent
+MODULE_DOCS_PATH=`pwd`/../curious_agent-docs/
 SCRIPT_PATH=`pwd`
 python_exec_val=''
-MODULE_LOG=${SCRIPT_PATH}/module.log
+MODULE_LOG=${SCRIPT_PATH}/curious_agent.log
 SCRIPT_NAME=$(basename "$0")
 export PYTHONPATH=$PWD
 CURRENT_DATE=`date +%d/%m/%Y`

@@ -1,4 +1,4 @@
-"""A setuptools based setup module.
+"""A setuptools based setup curious_agent.
 
 See:
 https://packaging.python.org/en/latest/distributing.html
@@ -10,7 +10,7 @@ from setuptools import setup, find_packages
 # To use a consistent encoding
 from codecs import open
 from os import path
-from module.metadata import metadata as md
+from curious_agent.metadata import metadata as md
 
 here = path.abspath(path.dirname(__file__))
 
@@ -72,7 +72,7 @@ setup(
     # installed, specify them here.  If using Python 2.6 or less, then these
     # have to be included in MANIFEST.in as well.
     # package_data={
-    #     'module': ['package_data.dat'],
+    #     'curious_agent': ['package_data.dat'],
     # },
 
     # Although 'package_data' is the preferred approach, in some case you may
@@ -86,7 +86,7 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     # entry_points={
     #     'console_scripts': [
-    #         'module=module:main',
+    #         'curious_agent=curious_agent:main',
     #     ],
     # },
 )

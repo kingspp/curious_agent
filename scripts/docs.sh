@@ -13,7 +13,7 @@ function generate_docs() {
 '
     cd ${SCRIPT_PATH}
     rm -rf docs/
-    echo "Generating sphinx docs . . ." && log export SPHINXBUILD=python3 && log sphinx-apidoc -d 10 -F -H module -A "Prathyush SP"  -V "0.0.1" -R "0.0.1"  -f -o  docs ${PACKAGE_NAME} ./module/setup.py
+    echo "Generating sphinx docs . . ." && log export SPHINXBUILD=python3 && log sphinx-apidoc -d 10 -F -H curious_agent -A "Prathyush SP"  -V "0.0.1" -R "0.0.1"  -f -o  docs ${PACKAGE_NAME} ./curious_agent/setup.py
     script_fail 'Error running sphinx-apidoc'
     rm -rf gitchangelog.rc && touch .gitchangelog.rc
     echo "Fetching changelog . . ." && gitchangelog > docs/changelog.rst; script_fail 'Gitchangelog Error / Not found'
@@ -32,7 +32,7 @@ function generate_docs() {
     " ; script_fail 'Memory Snippet error'
     write_to_file stats.rst "$stats_rst"
     write_to_file about.rst "$about_rst"
-    sed -i.bak -e 's/module package/Documentation/g' module.rst
+    sed -i.bak -e 's/curious_agent package/Documentation/g' curious_agent.rst
     `pandoc  --from=markdown --to=rst --output=install.rst ../INSTALL.md`; script_fail 'Pandoc Error'
     `pandoc --from=markdown --to=rst --output=qstart.rst ../README.md` ; script_fail 'Pandoc Error'
     `pandoc --from=markdown --to=rst --output=samples.rst ../SAMPLES.md` ; script_fail 'Pandoc Error'

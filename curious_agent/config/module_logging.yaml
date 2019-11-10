@@ -4,9 +4,9 @@ disable_existing_loggers: true
 
 filters:
     info_filter:
-        () : module.logging_config_manager.InfoFilter
+        () : curious_agent.logging_config_manager.InfoFilter
     error_filter:
-        () : module.logging_config_manager.ErrorFilter
+        () : curious_agent.logging_config_manager.ErrorFilter
 
 formatters:
     standard:

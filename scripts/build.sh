@@ -36,10 +36,10 @@ function generate_cython_dist(){
     cd ${SCRIPT_PATH} &&  exec_python "$python_snippet_init_cp"
     tmp_dir=/tmp/${PROJECT_NAME}
     mkdir -p ${tmp_dir}/module_package
-    cp -r ${tmp_dir}/module requirements.txt ${tmp_dir}/module_package/
+    cp -r ${tmp_dir}/curious_agent requirements.txt ${tmp_dir}/module_package/
     cd ${tmp_dir}/module_package/
     find . | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
-    tar -cJvf ${SCRIPT_PATH}/dist/module-ct-${MODULE_VERSION}.tar.xz ./*
+    tar -cJvf ${SCRIPT_PATH}/dist/curious_agent-ct-${MODULE_VERSION}.tar.xz ./*
     rm -rf ${tmp_dir}
 }
 

@@ -12,7 +12,7 @@
 ..todo::
 """
 import os
-from module.logging_config_manager import setup_logging
+from curious_agent.logging_config_manager import setup_logging
 MODULE_PATH = os.path.dirname(os.path.abspath(__file__))
 
 class Singleton(type):
@@ -35,11 +35,11 @@ setup_logging(default_path=os.path.join("/".join(__file__.split('/')[:-1]), 'con
 # import multiprocessing
 # multiprocessing.context._force_start_method('spawn')
 
-from module.store import MODULE_STORE
-from module.config_manager import MODULE_CONFIG, MODULE_CONFIG_DATA
-from module.metadata import metadata as md
+from curious_agent.store import MODULE_STORE
+from curious_agent.config_manager import MODULE_CONFIG, MODULE_CONFIG_DATA
+from curious_agent.metadata import metadata as md
 
 __version__ = md.__version__
 
 if __name__ == '__main__':
-    print('module.__init__ success . . .')
+    print('curious_agent.__init__ success . . .')

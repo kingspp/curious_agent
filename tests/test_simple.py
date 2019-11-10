@@ -24,7 +24,7 @@ def setup_module():
     """
     | **@author:** Prathyush SP
     |
-    | Module Setup - Called when this module is initialized - First Call
+    | Module Setup - Called when this curious_agent is initialized - First Call
     """
     pass
 
@@ -33,7 +33,7 @@ def teardown_module():
     """
     | **@author:** Prathyush SP
     |
-    | Module Teardown - Called when this module is completed - Last Call
+    | Module Teardown - Called when this curious_agent is completed - Last Call
     """
     pass
 

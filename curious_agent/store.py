@@ -12,7 +12,7 @@
 ..todo::
     --
 """
-from module import Singleton
+from curious_agent import Singleton
 from collections import OrderedDict
 import logging
 
