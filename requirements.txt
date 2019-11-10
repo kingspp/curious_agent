@@ -13,6 +13,7 @@ pympler
 coverage
 sphinxcontrib-versioning
 munch
+numpy
 
 # Module Dependencies
 opencv-python-headless
