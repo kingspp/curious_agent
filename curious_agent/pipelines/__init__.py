@@ -130,6 +130,7 @@ class Pipeline(object):
         # check the file-system for checkpoints
         # call the load function with the right arguments
         # we may need to change the signature of load
+        self.train(True)
         pass
 
     @abstractmethod
@@ -156,10 +157,10 @@ class Pipeline(object):
         """
 
         # the initialization branches mentioned above
-        if not continuing:  # if starting from scratch
+        if not continuing:  # Starting
             pass  # custom startup initialization
-        else:  # if resuming training
-            self.load()  # loads the state variable which contains everything you need
+        else:  # Continuing
+            pass  # custom continuing initialization
 
         # after the initialization branches, the function should be implemented as if the algorithm is continuing from
         # a halted state, as well as from a startup-state. the same logic should work, in either case.
