@@ -12,3 +12,4 @@
 ..todo::
     --
 """
+from curious_agent.models.model import Model

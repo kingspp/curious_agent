@@ -1,9 +1,0 @@
-{
-  "common_config": {
-    "path": {
-      "logs": "/logs/"
-    },
-    "log_level": "DEBUG",
-    "python_optimise": 1
-  }
-}

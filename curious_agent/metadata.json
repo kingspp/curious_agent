@@ -1,10 +1,10 @@
 {
-  "__name__": "module",
-  "__version__": "0.0.0",
-  "__description__": "Module Description",
-  "__author__": "author name",
-  "__email__": "author email",
-  "__license__": "",
+  "__name__": "curious_agent",
+  "__version__": "0.0.1",
+  "__description__": "An agent which is curious!",
+  "__author__": "<>",
+  "__email__": "<>",
+  "__license__": "MIT",
   "__classifiers__": [
     "Development Status :: 0 - Alpha",
     "Intended Audience :: Developers",
@@ -12,6 +12,6 @@
     "Programming Language :: Python :: 3.5",
     "Programming Language :: Python :: 3.6"
   ],
-  "__url__": "repository url",
-  "__keywords__": "module keywords"
+  "__url__": "https://github.com/kingspp/curious_agent",
+  "__keywords__": "rl curiousity"
 }

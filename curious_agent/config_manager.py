@@ -26,7 +26,7 @@ from curious_agent import string_constants as constants
 logger = logging.getLogger(__name__)
 
 
-class CommonConfig(object):
+class BaseConfig(object):
     """
     | **@author:** Prathyush SP
     | Common Configuration
@@ -34,14 +34,15 @@ class CommonConfig(object):
 
     # todo: Prathyush SP: Convert keys to string constants
     @typechecked
-    def __init__(self, common_config: dict):
+    def __init__(self, base_config: dict):
         try:
 
-            self.LOG_LEVEL = common_config['log_level']
-            self.PATH_LOG = common_config['path']['logs']
+            self.LOG_LEVEL = base_config['log_level']
+            self.PATH_LOG = base_config['path']['logs']
             self._GLOBAL_LOGGING_CONFIG_FILE_PATH = os.path.join("/".join(__file__.split('/')[:-1]), 'config',
                                                                  'module_logging.yaml')
-            self.PYTHON_OPTIMISE = common_config['python_optimise']
+            self.PYTHON_OPTIMISE = base_config['python_optimise']
+            self.GC_FREQUENCY = base_config['gc_frequency']
             os.environ['PYTHONOPTIMIZE'] = str(self.PYTHON_OPTIMISE)
         except KeyError as ke:
             raise Exception('Key Error. Config Error', ke)
@@ -66,7 +67,7 @@ class ConfigManager(metaclass=Singleton):
             raise Exception(
                 'Configuration file path error. Please provide configuration file path: ' + config_file_path, e)
         try:
-            self.CommonConfig = CommonConfig(MODULE_CONFIG_DATA['common_config'])
+            self.BaseConfig = BaseConfig(MODULE_CONFIG_DATA['common_config'])
         except KeyError as ke:
             raise Exception('Key not found. ', ke)
 
@@ -102,6 +103,27 @@ class ConfigManager(metaclass=Singleton):
         self.CommonConfig._GLOBAL_LOGGING_CONFIG_FILE_PATH = config_file_path
 
 
-ConfigPath = os.path.join("/".join(__file__.split('/')[:-1]), 'config', 'module_config.json')
+class PrathyushConfig():
+    pass
+
+
+class SinanConfig(object):
+    def __init__(self, var_1: int, var_2: str):
+        pass
+
+
+class ShreeshaConfig():
+    pass
+
+
+class RameshConfig():
+    pass
+
+
+class MahdiConfig():
+    pass
+
+
+ConfigPath = os.path.join("/".join(__file__.split('/')[:-1]), 'config', 'base_config.json')
 MODULE_CONFIG = ConfigManager(config_file_path=ConfigPath).get_config_manager()
 MODULE_CONFIG_DATA = OrderedDict()

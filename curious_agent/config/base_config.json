@@ -1,0 +1,12 @@
+{
+  "base_config": {
+    "experiment_name": "prathyush",
+    "path": {
+      "logs": "/logs/",
+      "checkpoint": "/checkpoint"
+    },
+    "log_level": "DEBUG",
+    "python_optimise": 1,
+    "gc_frequency": 100
+  }
+}
