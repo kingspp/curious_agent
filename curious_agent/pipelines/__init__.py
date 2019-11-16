@@ -65,9 +65,7 @@ class Pipeline(object):
                     time.sleep(self.interval)
                     self.test()
 
-        # launch the performance probing thread
         self.performanceProbingThread = PerformanceProbingThread(10)
-        self.performanceProbingThread.start()
 
     @abstractmethod
     @typechecked
@@ -81,7 +79,6 @@ class Pipeline(object):
         """
         raise NotImplementedError
 
-    # TODO: needs generic implementation
     @typechecked
     def load(self):
         """A method that loads the state variables and the models to enable the experiment to continue from a halted
@@ -91,9 +88,9 @@ class Pipeline(object):
 
         :return: void
         """
+        # TODO: needs generic implementation
         pass
 
-    # TODO: needs generic implementation
     @typechecked
     def save(self):
         """A method that saves the models and state variables to enable the safe halting and resumption of experiments
@@ -102,6 +99,37 @@ class Pipeline(object):
 
         :return: void
         """
+        # TODO: needs generic implementation
+        pass
+
+    @typechecked
+    def start_training(self):
+        """Method that starts the training and handles the performance thread correctly
+
+        :return: void
+        """
+        # launch the performance probing thread
+        self.performanceProbingThread.start()
+        # start the training process
+        self.train(False)
+        # stop the performance probing thread
+        self.performanceProbingThread.stop()
+
+    @typechecked
+    def continue_training(self, checkpoint: int):
+        """Methods that continues the training from previous checkpoints
+
+        :param checkpoint: the index of the checkpoint in reverse order, starting from the last checkpoint. 0 is the
+        last one, 1 is the checkpoint before, etc...
+
+        :note: if there are no checkpoints, the method simply returns.
+
+        :return: void
+        """
+        # TODO: needs generic implementation
+        # check the file-system for checkpoints
+        # call the load function with the right arguments
+        # we may need to change the signature of load
         pass
 
     @abstractmethod
@@ -135,7 +163,4 @@ class Pipeline(object):
 
         # after the initialization branches, the function should be implemented as if the algorithm is continuing from
         # a halted state, as well as from a startup-state. the same logic should work, in either case.
-
-        # finally, stop the performance probing thread
-        self.performanceProbingThread.stop()
         raise NotImplementedError
