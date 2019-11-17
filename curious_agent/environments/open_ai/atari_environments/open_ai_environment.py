@@ -5,15 +5,16 @@ from curious_agent.environments.environment import Environment
 
 
 class AtariEnvironment(Environment):
-    def __init__(self, env_name, args, atari_wrapper=False, test=False):
+    def __init__(self, args, atari_wrapper=False, test=False):
         if atari_wrapper:
             clip_rewards = not test
-            self.env = make_wrap_atari(env_name, clip_rewards)
+            self.env = make_wrap_atari(args['env_name'], clip_rewards)
         else:
-            self.env = gym.make(env_name)
-
+            self.env = gym.make(args['env_name'])
+        self.args=args
         self.action_space = self.env.action_space
         self.observation_space = self.env.observation_space
+        super().__init__()
         
     def seed(self, seed):
         '''

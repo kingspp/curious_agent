@@ -71,8 +71,8 @@ class DQNAgent(Agent):
         self.eps_delta = (self.args.eps - self.args.eps_min) / self.args.eps_decay_window
 
         # Create Policy and Target Networks
-        self.policy_net = CNNModel(env).to(self.args.device)
-        self.target_net = CNNModel(env).to(self.args.device)
+        self.policy_net = CNNModel(env, self.args).to(self.args.device)
+        self.target_net = CNNModel(env, self.args).to(self.args.device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=1.5e-4, eps=0.001)
         # Compute Huber loss
@@ -87,12 +87,12 @@ class DQNAgent(Agent):
         self.target_net.eval()
         self.target_net.load_state_dict(self.policy_net.state_dict())
 
-        if args.test_dqn:
-            # you can load your model here
-            ###########################
-            # YOUR IMPLEMENTATION HERE #
-            print('loading trained model')
-            self.load_model()
+        # if args.test_dqn:
+        #     # you can load your model here
+        #     ###########################
+        #     # YOUR IMPLEMENTATION HERE #
+        #     print('loading trained model')
+        #     self.load_model()
 
         if args.use_pri_buffer:
             print('Using priority buffer . . .')
@@ -132,10 +132,10 @@ class DQNAgent(Agent):
             self.probability_list[argq[0].item()] += 1 - self.cur_eps
             # Use random choice to decide between a random action / best action
             action = torch.tensor([np.random.choice(self.action_list, p=self.probability_list)])
-            if not self.args.test_dqn:
-                return action, q
+            # if self.args.test_dqn:
+            #     action.item()
         ###########################
-        return action.item()
+        return action, q
 
     def optimize_model(self):
         """
@@ -225,6 +225,15 @@ class DQNAgent(Agent):
         else:
             self.cur_eps = 0.01
         print(f"Model successfully restored.")
+
+    def collect_garbage(self, i_episode):
+        """
+        Collect garbage based on condition
+        :param i_episode: Episode Number
+        """
+        if i_episode % self.args.gc_freq == 0:
+            print("Executing garbage collector . . .")
+            gc.collect()
 
     def train(self, persist):
         """

@@ -6,7 +6,6 @@
       "checkpoint": "/checkpoint"
     },
     "log_level": "DEBUG",
-    "python_optimise": 1,
-    "gc_frequency": 100
+    "python_optimise": 1
   }
 }
