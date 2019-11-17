@@ -1,1 +1,1 @@
-from .atari_agent import AtariAgent
+from .dqn_agent import AtariAgent

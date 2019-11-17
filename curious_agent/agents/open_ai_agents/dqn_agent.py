@@ -10,24 +10,23 @@ import torch.optim as optim
 import math
 from itertools import count
 import gc
-from agent import Agent
-from dqn_model import DQN
+from curious_agent.agents import Agent
+from curious_agent.models.cnn_model import CNNModel
 import time
 from torch.autograd import Variable
 import json
 import uuid
 from curious_agent.environments.open_ai.atari_environments.open_ai_environment import AtariEnvironment
+from curious_agent.buffers import PrioritizedBuffer, ReplayBuffer
+from curious_agent.meta.default_meta import DefaultMetaData
 
-"""
-you can import any package and define any extra function as you need
-"""
 
 torch.manual_seed(595)
 np.random.seed(595)
 random.seed(595)
 
 
-class AtariAgent(Agent):
+class DQNAgent(Agent):
     def __init__(self, env, args):
         """
         Initialize everything you need here.
@@ -39,7 +38,7 @@ class AtariAgent(Agent):
             ...
         """
 
-        super(AtariAgent, self).__init__(env)
+        super(DQNAgent, self).__init__(env)
         # make sure that the environment is an Atari/OpenAI one!
         assert isinstance(env, AtariEnvironment)
         ###########################
@@ -52,28 +51,28 @@ class AtariAgent(Agent):
         self.eps_threshold = None
         self.nA = env.action_space.n
         self.action_list = np.arange(self.nA)
-        self.reward_list = deque(maxlen=args.window)  # np.zeros(args.window, np.float32)
-        self.max_q_list = deque(maxlen=args.window)  # np.zeros(args.window, np.float32)
-        self.loss_list = deque(maxlen=args.window)  # np.zeros(args.window, np.float32)
+        self.reward_list = deque(maxlen=args.window)
+        self.max_q_list = deque(maxlen=args.window)
+        self.loss_list = deque(maxlen=args.window)
         self.probability_list = np.zeros(env.action_space.n, np.float32)
         self.cur_eps = None
         self.t = 0
         self.ep_len = 0
         self.mode = None
         if self.args.use_pri_buffer:
-            self.replay_buffer = NaivePrioritizedBuffer(capacity=self.args.capacity, args=self.args)
+            self.replay_buffer = PrioritizedBuffer(capacity=self.args.capacity, args=self.args)
         else:
             self.replay_buffer = ReplayBuffer(capacity=self.args.capacity, args=self.args)
         self.position = 0
 
         self.args.save_dir += f'/{self.exp_id}/'
         os.system(f"mkdir -p {self.args.save_dir}")
-        self.meta = MetaData(fp=open(os.path.join(self.args.save_dir, 'result.csv'), 'w'), args=self.args)
+        self.meta = DefaultMetaData(fp=open(os.path.join(self.args.save_dir, 'result.csv'), 'w'), args=self.args)
         self.eps_delta = (self.args.eps - self.args.eps_min) / self.args.eps_decay_window
 
         # Create Policy and Target Networks
-        self.policy_net = DQN(env).to(self.args.device)
-        self.target_net = DQN(env).to(self.args.device)
+        self.policy_net = CNNModel(env).to(self.args.device)
+        self.target_net = CNNModel(env).to(self.args.device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.optimizer = optim.Adam(self.policy_net.parameters(), lr=1.5e-4, eps=0.001)
         # Compute Huber loss
@@ -179,7 +178,7 @@ class AtariAgent(Agent):
         for param in self.policy_net.parameters():
             param.grad.data.clamp_(-1, 1)
 
-        if self.args.use_pri_buffer:
+        if isinstance(self.replay_buffer, PrioritizedBuffer):
             self.replay_buffer.update_priorities(indices, prios.data.cpu().numpy())
 
         self.optimizer.step()
@@ -211,8 +210,6 @@ class AtariAgent(Agent):
             with open(meta_file, 'w') as f:
                 self.meta.dump(f)
 
-
-
     def load_model(self):
         """
         Load Model
@@ -229,7 +226,7 @@ class AtariAgent(Agent):
             self.cur_eps = 0.01
         print(f"Model successfully restored.")
 
-    def train(self):
+    def train(self, persist):
         """
         Implement your training algorithm here
         """
@@ -286,7 +283,7 @@ class AtariAgent(Agent):
                 if self.ep_len % self.args.learn_freq == 0:
                     loss = self.optimize_model()
                     self.loss_list[-1] += loss
-            self.loss_list[-1] /=self.ep_len
+            self.loss_list[-1] /= self.ep_len
 
             # Update meta
             self.meta.update(i_episode, self.t, time.time() - start_time, time.time() - train_start,
@@ -295,8 +292,3 @@ class AtariAgent(Agent):
                              self.max_q_list[-1], np.mean(self.max_q_list),
                              self.loss_list[-1], np.mean(self.loss_list),
                              self.mode)
-
-        ###########################
-
-    def test(self):
-        pass

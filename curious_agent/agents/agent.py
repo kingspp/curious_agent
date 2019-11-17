@@ -4,16 +4,19 @@
 DO NOT revise this file
 
 """
-from curious_agent.environments import Environment
-from abc import abstractmethod
+from curious_agent.environments.environment import Environment
+from abc import ABCMeta, abstractmethod
+from munch import Munch
 from typeguard import typechecked
-from numpy import np
+import numpy as np
 
 
-class Agent(object):
+class Agent(metaclass=ABCMeta):
+
     @typechecked
     def __init__(self, env: Environment):
         self.env = env
+        self.state = Munch()
 
     @abstractmethod
     def make_action(self, observation: np.array, test: bool = True):
@@ -44,7 +47,7 @@ class Agent(object):
 
     @abstractmethod
     @typechecked
-    def train(self, continuing: bool):
+    def train(self, persist: bool):
         """A method that contains the whole reinforcement learning algorithm
 
         The implementations of this method should respect the following idiomatic restrictions to ensure reliable
@@ -59,14 +62,14 @@ class Agent(object):
             - besides that, the body can contain whatever code construct that is needed for the algorithm to be
             implemented, like for-loops, while-loops, if-else statements, nested for-loops etc...
 
-        :param continuing: a boolean indicating if the algorithm is continuing, so that it can tell which initialization
+        :param persist: a boolean indicating if the algorithm is continuing, so that it can tell which initialization
         branch to use.
 
         :return: None
         """
 
         # the initialization branches mentioned above
-        if not continuing:  # Starting
+        if not persist:  # Starting
             pass  # custom startup initialization
         else:  # Continuing
             pass  # custom continuing initialization

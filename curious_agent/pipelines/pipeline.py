@@ -31,7 +31,7 @@ class Pipeline(object):
     """
 
     @typechecked
-    def __init__(self, train_agent: Agent, test_agent: Agent, test_environment: Environment):
+    def __init__(self, train_agent: Agent, environent:Environment,test_agent: Agent=None, test_environment: Environment=None):
         self.train_agent = train_agent
         self.test_environment = test_environment
         # different agent and environment references to avoid data-races

@@ -1,1 +1,1 @@
-from .pipeline import Pipeline
+from curious_agent.pipelines.pipeline import Pipeline
