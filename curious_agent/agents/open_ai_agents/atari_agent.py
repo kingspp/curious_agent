@@ -16,6 +16,7 @@ import time
 from torch.autograd import Variable
 import json
 import uuid
+from curious_agent.environments.open_ai.atari_environments.open_ai_environment import AtariEnvironment
 
 """
 you can import any package and define any extra function as you need
@@ -26,16 +27,7 @@ np.random.seed(595)
 random.seed(595)
 
 
-
-
-
-
-
-
-
-
-
-class Agent_DQN(Agent):
+class AtariAgent(Agent):
     def __init__(self, env, args):
         """
         Initialize everything you need here.
@@ -47,7 +39,9 @@ class Agent_DQN(Agent):
             ...
         """
 
-        super(Agent_DQN, self).__init__(env)
+        super(AtariAgent, self).__init__(env)
+        # make sure that the environment is an Atari/OpenAI one!
+        assert isinstance(env, AtariEnvironment)
         ###########################
         # YOUR IMPLEMENTATION HERE #
 

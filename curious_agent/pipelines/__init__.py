@@ -12,6 +12,8 @@ from abc import abstractmethod
 from typeguard import typechecked
 import threading
 import time
+from curious_agent.agents import Agent
+from curious_agent.environments import Environment
 
 
 class Pipeline(object):
@@ -27,9 +29,14 @@ class Pipeline(object):
 
     """
 
-    def __init__(self):
-        self.state = []  # TODO: replace with a munch object of the same name
-        self.models = []  # TODO: replace with a munch object of the same name
+    @typechecked
+    def __init__(self, agent: Agent, test_environment: Environment, stat_recorder: StatRecorder):
+        self.agent = agent
+        self.test_environment = test_environment
+        self.stat_recorder = stat_recorder
+        # make sure that we do not let the environment be used by the agent.
+        assert self.agent.env != self.test_environment, "The agent and environment in the pipeline's arguments " \
+                                                        "should not be related. Use a new instance of the environment."
 
         class PerformanceProbingThread(threading.Thread):
             """Class defining the behavior of the performance probing thread
@@ -38,7 +45,7 @@ class Pipeline(object):
 
             """
             @typechecked
-            def __init__(self, interval: int):
+            def __init__(self, pipeline: Pipeline, interval: int):
                 """ Performance probing thread constructor
 
                 :param interval: the interval at which the "test" function will be called
@@ -46,6 +53,7 @@ class Pipeline(object):
                 threading.Thread.__init__(self)
                 self.interval = interval
                 self._stop_event = threading.Event()
+                self.pipeline = pipeline
 
             @typechecked
             def stop(self):
@@ -63,60 +71,62 @@ class Pipeline(object):
                 """
                 while not self.stopped:
                     time.sleep(self.interval)
-                    self.test()
+                    self.pipeline.performance_stats()
 
-        self.performanceProbingThread = PerformanceProbingThread(10)
+        self.performanceProbingThread = PerformanceProbingThread(self, 10)
 
     @abstractmethod
     @typechecked
-    def test(self):
+    def performance_stats(self):
         """A method that tests the latest model output during an experiment and saves statistics and video footage of
         the test run
 
-        This test function is specific for each pipeline and needs to be implemented
+        This test assumes that the agent and the test_environment are compatible, if they are not, an error may result
 
         :return: void
         """
+        self.stat_recorder.record(self.agent, self.test_environment)
         raise NotImplementedError
 
+    # @typechecked
+    # def load(self):
+    #     """A method that loads the state variables and the models to enable the experiment to continue from a halted
+    #     state
+    #
+    #     This method affect the self.state and self.models variables.
+    #
+    #     :return: void
+    #     """
+    #     # TODO: needs generic implementation
+    #     pass
+    #
+    # @typechecked
+    # def save(self):
+    #     """A method that saves the models and state variables to enable the safe halting and resumption of experiments
+    #
+    #     This method's side effect is only restricted to the file-system.
+    #
+    #     :return: void
+    #     """
+    #     # TODO: needs generic implementation
+    #     pass
+
     @typechecked
-    def load(self):
-        """A method that loads the state variables and the models to enable the experiment to continue from a halted
-        state
-
-        This method affect the self.state and self.models variables.
-
-        :return: void
-        """
-        # TODO: needs generic implementation
-        pass
-
-    @typechecked
-    def save(self):
-        """A method that saves the models and state variables to enable the safe halting and resumption of experiments
-
-        This method's side effect is only restricted to the file-system.
-
-        :return: void
-        """
-        # TODO: needs generic implementation
-        pass
-
-    @typechecked
-    def start_training(self):
+    def execute(self):
         """Method that starts the training and handles the performance thread correctly
 
         :return: void
         """
+        # TODO: setup the directory structure that corresponds to this experiment
         # launch the performance probing thread
         self.performanceProbingThread.start()
-        # start the training process
-        self.train(False)
+        # start the training process (blocking)
+        self.agent.train(False)
         # stop the performance probing thread
         self.performanceProbingThread.stop()
 
     @typechecked
-    def continue_training(self, checkpoint: int):
+    def resume(self, checkpoint: int):
         """Methods that continues the training from previous checkpoints
 
         :param checkpoint: the index of the checkpoint in reverse order, starting from the last checkpoint. 0 is the
@@ -126,42 +136,44 @@ class Pipeline(object):
 
         :return: void
         """
-        # TODO: needs generic implementation
-        # check the file-system for checkpoints
-        # call the load function with the right arguments
-        # we may need to change the signature of load
-        self.train(True)
-        pass
+        # TODO: reuse the directory structure that corresponds to this experiment
+        # launch the performance probing thread
+        self.performanceProbingThread.start()
+        self.agent.load(checkpoint)
+        # start the training process (blocking)
+        self.agent.train(True)
+        # stop the performance probing thread
+        self.performanceProbingThread.stop()
 
-    @abstractmethod
-    @typechecked
-    def train(self, continuing: bool):
-        """A method that contains the whole reinforcement learning algorithm
-
-        The implementations of this method should respect the following idiomatic restrictions to ensure reliable
-        training experiments:
-            - Include two initialization branches: "starting" and "continuing", each referring to the cases of starting
-            off, respectively, from a first-time-run or a paused state. This can be done using an if-else statement at
-            the beginning of the train function, with each branch containing the corresponding logic.
-            - Program assuming the "continuing logic", which means that at any point in the program outside of the
-            initialization branches, we assume as if the program is continuing. This can be done, for example, by
-            avoiding for loops that start from episode 0, and instead using ones that start from the current episode, of
-             course after initializing the episode number in the "continuing" branch of the initialization.
-            - besides that, the body can contain whatever code construct that is needed for the algorithm to be
-            implemented, like for-loops, while-loops, if-else statements, nested for-loops etc...
-
-        :param continuing: a boolean indicating if the algorithm is continuing, so that it can tell which initialization
-        branch to use.
-
-        :return: None
-        """
-
-        # the initialization branches mentioned above
-        if not continuing:  # Starting
-            pass  # custom startup initialization
-        else:  # Continuing
-            pass  # custom continuing initialization
-
-        # after the initialization branches, the function should be implemented as if the algorithm is continuing from
-        # a halted state, as well as from a startup-state. the same logic should work, in either case.
-        raise NotImplementedError
+    # @abstractmethod
+    # @typechecked
+    # def train(self, continuing: bool):
+    #     """A method that contains the whole reinforcement learning algorithm
+    #
+    #     The implementations of this method should respect the following idiomatic restrictions to ensure reliable
+    #     training experiments:
+    #         - Include two initialization branches: "starting" and "continuing", each referring to the cases of starting
+    #         off, respectively, from a first-time-run or a paused state. This can be done using an if-else statement at
+    #         the beginning of the train function, with each branch containing the corresponding logic.
+    #         - Program assuming the "continuing logic", which means that at any point in the program outside of the
+    #         initialization branches, we assume as if the program is continuing. This can be done, for example, by
+    #         avoiding for loops that start from episode 0, and instead using ones that start from the current episode, of
+    #          course after initializing the episode number in the "continuing" branch of the initialization.
+    #         - besides that, the body can contain whatever code construct that is needed for the algorithm to be
+    #         implemented, like for-loops, while-loops, if-else statements, nested for-loops etc...
+    #
+    #     :param continuing: a boolean indicating if the algorithm is continuing, so that it can tell which initialization
+    #     branch to use.
+    #
+    #     :return: None
+    #     """
+    #
+    #     # the initialization branches mentioned above
+    #     if not continuing:  # Starting
+    #         pass  # custom startup initialization
+    #     else:  # Continuing
+    #         pass  # custom continuing initialization
+    #
+    #     # after the initialization branches, the function should be implemented as if the algorithm is continuing from
+    #     # a halted state, as well as from a startup-state. the same logic should work, in either case.
+    #     raise NotImplementedError

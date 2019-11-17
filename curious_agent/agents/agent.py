@@ -4,7 +4,7 @@
 DO NOT revise this file
 
 """
-from environment import Environment
+from curious_agent.environments import Environment
 
 class Agent(object):
     def __init__(self, env):
