@@ -85,31 +85,10 @@ class Pipeline(object):
 
         :return: void
         """
-        self.stat_recorder.record(self.agent, self.test_environment)
-        raise NotImplementedError
-
-    # @typechecked
-    # def load(self):
-    #     """A method that loads the state variables and the models to enable the experiment to continue from a halted
-    #     state
-    #
-    #     This method affect the self.state and self.models variables.
-    #
-    #     :return: void
-    #     """
-    #     # TODO: needs generic implementation
-    #     pass
-    #
-    # @typechecked
-    # def save(self):
-    #     """A method that saves the models and state variables to enable the safe halting and resumption of experiments
-    #
-    #     This method's side effect is only restricted to the file-system.
-    #
-    #     :return: void
-    #     """
-    #     # TODO: needs generic implementation
-    #     pass
+        # TODO: resolve the location of the stats using the info: user, experiment# and checkpoint# available on the
+        #  file system (directory operations)
+        location = "stats"
+        self.stat_recorder.record(self.agent, self.test_environment, location)
 
     @typechecked
     def execute(self):
@@ -126,54 +105,23 @@ class Pipeline(object):
         self.performanceProbingThread.stop()
 
     @typechecked
-    def resume(self, checkpoint: int):
+    def resume(self, checkpoint: int, destructive: bool):
         """Methods that continues the training from previous checkpoints
 
         :param checkpoint: the index of the checkpoint in reverse order, starting from the last checkpoint. 0 is the
         last one, 1 is the checkpoint before, etc...
+        :param destructive: bool that indicates if the future checkpoints beyond the one that gets loaded are removed
 
         :note: if there are no checkpoints, the method simply returns.
 
         :return: void
         """
-        # TODO: reuse the directory structure that corresponds to this experiment
+        # TODO 1: reuse the directory structure that corresponds to this experiment
+        # TODO 2: resolve the name of the checkpoint folder and get the agent's (directory operations)
+        # TODO 3: if destructive, remove the checkpoints that come after the one that was loaded
         # launch the performance probing thread
         self.performanceProbingThread.start()
-        self.agent.load(checkpoint)
         # start the training process (blocking)
         self.agent.train(True)
         # stop the performance probing thread
         self.performanceProbingThread.stop()
-
-    # @abstractmethod
-    # @typechecked
-    # def train(self, continuing: bool):
-    #     """A method that contains the whole reinforcement learning algorithm
-    #
-    #     The implementations of this method should respect the following idiomatic restrictions to ensure reliable
-    #     training experiments:
-    #         - Include two initialization branches: "starting" and "continuing", each referring to the cases of starting
-    #         off, respectively, from a first-time-run or a paused state. This can be done using an if-else statement at
-    #         the beginning of the train function, with each branch containing the corresponding logic.
-    #         - Program assuming the "continuing logic", which means that at any point in the program outside of the
-    #         initialization branches, we assume as if the program is continuing. This can be done, for example, by
-    #         avoiding for loops that start from episode 0, and instead using ones that start from the current episode, of
-    #          course after initializing the episode number in the "continuing" branch of the initialization.
-    #         - besides that, the body can contain whatever code construct that is needed for the algorithm to be
-    #         implemented, like for-loops, while-loops, if-else statements, nested for-loops etc...
-    #
-    #     :param continuing: a boolean indicating if the algorithm is continuing, so that it can tell which initialization
-    #     branch to use.
-    #
-    #     :return: None
-    #     """
-    #
-    #     # the initialization branches mentioned above
-    #     if not continuing:  # Starting
-    #         pass  # custom startup initialization
-    #     else:  # Continuing
-    #         pass  # custom continuing initialization
-    #
-    #     # after the initialization branches, the function should be implemented as if the algorithm is continuing from
-    #     # a halted state, as well as from a startup-state. the same logic should work, in either case.
-    #     raise NotImplementedError
