@@ -42,7 +42,7 @@ class PrioritizedBuffer(object):
         weights = (total * probs[indices]) ** (-beta)
         weights /= weights.max()
         weights = np.array(weights, dtype=np.float32)
-        return [*map(lambda x: torch.Variable(torch.cat(x, 0)).to(self.args.device), zip(*samples)), indices, weights]
+        return [*map(lambda x: Variable(torch.cat(x, 0)).to(self.args.device), zip(*samples)), indices, weights]
 
     def update_priorities(self, batch_indices, batch_priorities):
         for idx, prio in zip(batch_indices, batch_priorities):
