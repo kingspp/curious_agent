@@ -27,36 +27,41 @@ logger = logging.getLogger(__name__)
 
 
 class Pipeline(object):
-    """Class defining shared functionality that environments have to implement to implement specific RL algorithms'
-    logic
-
-    The train function below contains essential boilerplate that needs to be used in the extensions of this class. The
-    This boilerplate exemplifies the idiomatic restrictions that should be followed to preserve the reliability of the
-    training process and experiment collection.
-
-    The other function that needs implementation is "test". This function will be called by a thread that is launched by
-    by the generic init function.
+    """Class defining the Pipeline that includes the commonalities that should govern all experiments run using this
+    framework
 
     """
 
+    @typechecked
     def __init__(self, train_agent: Agent,
                  environment: Environment,
                  config: Munch,
                  test_agent: Agent = None, test_environment: Environment = None):
+        # configuration
         self.name = config['pipeline_name']
         self.config = config
+        # training elements
         self.train_agent = train_agent
+        self.env = environment
+        # testing elements
         self.test_environment = test_environment
-        # different agent and environment references to avoid data-races
-        self.stats_recorder = StatsRecorder(test_agent, test_environment)
-        # make sure that we do not let the environment be used by the agent.
-        # assert self.agent.env != self.test_environment, "The agent and environment in the pipeline's arguments " \
-        #                                                 "should not be related. Use a new instance of the environment."
-        # # make sure that the train agent and test agent are of the same type
-        # assert isinstance(test_agent, train_agent), "The train and test agent should be of the same type."
+        self.probing_enabled = False
+
+        # if both are provided, the testing functionality is enabled
+        if test_agent is not None and test_environment is not None:
+            self.probing_enabled = True
+            # make sure that the train agent and test agent are of the same type
+            assert isinstance(test_agent, type(train_agent)), "The train and test agent should be of the same type."
+            self.stats_recorder = StatsRecorder(test_agent, test_environment)
+            # make sure that we do not let the environment be used by the agent.
+            assert self.train_agent.env != self.test_environment, "The agent and environment in the pipeline's "\
+                                                                  "arguments should not be related. Use a new "\
+                                                                  "instance of the environment."
+        # logging elements
         self.experiments_meta = {"experiments": {}}
         self.current_experiments_meta = {"runs": 0}
         self.cur_exp_dir = ""
+
         if not MODULE_CONFIG.BaseConfig.DRY_RUN:
             self.create_base_directories()
 
@@ -98,7 +103,16 @@ class Pipeline(object):
 
         self.performanceProbingThread = PerformanceProbingThread(self, 10)
 
+    @typechecked
     def create_base_directories(self):
+        """Method that creates the experiments file if the base_dir is not set in the base_config file, or the custom
+        one specified otherwise.
+
+        This function also loads the current experiment's meta from that file if it is already there. It does nothing,
+        otherwise.
+
+        :return: void
+        """
         Directories.mkdir(MODULE_CONFIG.BaseConfig.BASE_DIR)
         meta_file = MODULE_CONFIG.BaseConfig.BASE_DIR + "/" + MODULE_CONFIG.BaseConfig.EXPERIMENTS_META_NAME + '.json'
         try:
@@ -109,30 +123,40 @@ class Pipeline(object):
         except:
             pass
 
+    @typechecked
     def create_experiments_dir(self):
+        # increment the number of runs for this experiment
         self.current_experiments_meta['runs'] += 1
+        # update the in-memory json experiments' meta
         self.experiments_meta['experiments'][self.name] = self.current_experiments_meta
+        # create the folder for the pipeline/experiment, if it's not there yet
         Directories.mkdir(os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, self.name))
+        # create the folder corresponding to the current run, and add the logs, checkpoints, graphs and configs
+        # directories.
         self.cur_exp_dir = os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, self.name,
                                         str(self.current_experiments_meta['runs']))
+        path_configs = MODULE_CONFIG.BaseConfig.PATH_CONFIGS
         MODULE_CONFIG.BaseConfig.PATH_LOG = os.path.join(self.cur_exp_dir, MODULE_CONFIG.BaseConfig.PATH_LOG)
         MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT = os.path.join(self.cur_exp_dir,
                                                                 MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT)
         MODULE_CONFIG.BaseConfig.PATH_GRAPHS = os.path.join(self.cur_exp_dir, MODULE_CONFIG.BaseConfig.PATH_GRAPHS)
         MODULE_CONFIG.BaseConfig.PATH_CONFIGS = os.path.join(self.cur_exp_dir, MODULE_CONFIG.BaseConfig.PATH_CONFIGS)
+
         Directories.mkdir(self.cur_exp_dir)
         Directories.mkdir(MODULE_CONFIG.BaseConfig.PATH_LOG)
         Directories.mkdir(MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT)
         Directories.mkdir(MODULE_CONFIG.BaseConfig.PATH_GRAPHS)
         Directories.mkdir(MODULE_CONFIG.BaseConfig.PATH_CONFIGS)
-        json.dump(MODULE_CONFIG_DATA, open(f"{self.cur_exp_dir}/configs/base_config.json", 'w'), indent=2)
-        json.dump(self.config, open(f"{self.cur_exp_dir}/configs/pipeline_config.json", 'w'), indent=2)
+        # write the configurations of that run in its configurations folder, for retrospective inspections
+        json.dump(MODULE_CONFIG_DATA, open(f"{self.cur_exp_dir}/{path_configs}/base_config.json", 'w'), indent=2)
+        json.dump(self.config, open(f"{self.cur_exp_dir}/{path_configs}/pipeline_config.json",
+                                    'w'), indent=2)
+        # write the experiments json that keeps track of each experiment's number of runs, and log
         json.dump(self.experiments_meta, open(
             MODULE_CONFIG.BaseConfig.BASE_DIR + "/" + MODULE_CONFIG.BaseConfig.EXPERIMENTS_META_NAME + '.json', 'w'),
                   indent=2)
         add_logs_to_tmp(path=os.path.join(self.cur_exp_dir, MODULE_CONFIG.BaseConfig.PATH_LOG))
 
-    @abstractmethod
     @typechecked
     def performance_stats(self):
         """A method that tests the latest model output during an experiment and saves statistics and video footage of
@@ -150,7 +174,9 @@ class Pipeline(object):
 
     @typechecked
     def execute(self):
-        """Method that starts the training and handles the performance thread correctly
+        """Method that starts the training and handles the performance thread correctly, if enabled
+
+        It also creates a new folder tree-structure storing the run's information
 
         :return: void
         """
@@ -158,23 +184,27 @@ class Pipeline(object):
         if not MODULE_CONFIG.BaseConfig.DRY_RUN:
             self.create_experiments_dir()
         try:
-            self.performanceProbingThread.start()
-            # start the training process (blocking)
+            if self.probing_enabled:
+                self.performanceProbingThread.start()
+            # create file structure for TensorBoardX logging
             os.system(
                 f"tensorboard --logdir {MODULE_CONFIG.BaseConfig.PATH_GRAPHS} --port {MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT} > {MODULE_CONFIG.BaseConfig.PATH_LOG}/tb.log 2>&1 &")
             logger.info(f"Starting tensorboard @ http://localhost:{MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT}/#scalars")
+            # start the training process (blocking)
             self.train_agent.train(False)
-            # stop the performance probing thread
-            self.performanceProbingThread.stop()
+            if self.probing_enabled:
+                # stop the performance probing thread
+                self.performanceProbingThread.stop()
         except KeyboardInterrupt:
             self.cleanup()
 
     @typechecked
     def resume(self, checkpoint: int, destructive: bool):
-        """Methods that continues the training from previous checkpoints
+        """Methods that continues the training from previous checkpoints. Everything stored in the recommended ways for
+        hot reloads in this framework is restored for training resumption
 
-        :param checkpoint: the index of the checkpoint in reverse order, starting from the last checkpoint. 0 is the
-        last one, 1 is the checkpoint before, etc...
+        :param checkpoint: the index of the checkpoint to reload from. i.e. 0 is for the first checkpoint, -1 for the
+        last
         :param destructive: bool that indicates if the future checkpoints beyond the one that gets loaded are removed
 
         :note: if there are no checkpoints, the method simply returns.
@@ -186,20 +216,26 @@ class Pipeline(object):
         # TODO 3: if destructive, remove the checkpoints that come after the one that was loaded
         # launch the performance probing thread
         try:
-            self.performanceProbingThread.start()
-            # start the training process (blocking)
+            if self.probing_enabled:
+                self.performanceProbingThread.start()
+            # create file structure for TensorBoardX logging
             os.system(
-                f"tensorboard --logdir {MODULE_CONFIG.BaseConfig.PATH_GRAPHS} --port {MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT}")
+                f"tensorboard --logdir {MODULE_CONFIG.BaseConfig.PATH_GRAPHS} --port {MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT} > {MODULE_CONFIG.BaseConfig.PATH_LOG}/tb.log 2>&1 &")
             logger.info(f"Starting tensorboard @ http://localhost:{MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT}/#scalars")
+            # start the training process (blocking)
             self.train_agent.train(True)
-            # stop the performance probing thread
-            self.performanceProbingThread.stop()
+            if self.probing_enabled:
+                # stop the performance probing thread
+                self.performanceProbingThread.stop()
         except KeyboardInterrupt:
             self.cleanup()
 
+    @typechecked
     def cleanup(self):
         os.system(f"kill -9 $(lsof -t -i:{MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT} -sTCP:LISTEN)")
 
+    @abstractmethod
+    @typechecked
     def collect_garbage(self):
         """
         Collect garbage based on condition
