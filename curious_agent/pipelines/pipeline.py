@@ -21,6 +21,10 @@ from curious_agent import MODULE_CONFIG, MODULE_CONFIG_DATA
 from curious_agent.util import Directories, File
 import os
 from curious_agent.util import add_logs_to_tmp
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class Pipeline(object):
     """Class defining shared functionality that environments have to implement to implement specific RL algorithms'
@@ -111,12 +115,17 @@ class Pipeline(object):
         Directories.mkdir(os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, self.name))
         self.cur_exp_dir = os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, self.name,
                                         str(self.current_experiments_meta['runs']))
+        MODULE_CONFIG.BaseConfig.PATH_LOG = os.path.join(self.cur_exp_dir, MODULE_CONFIG.BaseConfig.PATH_LOG)
+        MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT = os.path.join(self.cur_exp_dir,
+                                                                MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT)
+        MODULE_CONFIG.BaseConfig.PATH_GRAPHS = os.path.join(self.cur_exp_dir, MODULE_CONFIG.BaseConfig.PATH_GRAPHS)
+        MODULE_CONFIG.BaseConfig.PATH_CONFIGS = os.path.join(self.cur_exp_dir, MODULE_CONFIG.BaseConfig.PATH_CONFIGS)
         Directories.mkdir(self.cur_exp_dir)
-        Directories.mkdir(os.path.join(self.cur_exp_dir, MODULE_CONFIG.BaseConfig.PATH_LOG))
-        Directories.mkdir(os.path.join(self.cur_exp_dir, MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT))
-        Directories.mkdir(os.path.join(self.cur_exp_dir, MODULE_CONFIG.BaseConfig.PATH_GRAPHS))
-        Directories.mkdir(os.path.join(self.cur_exp_dir, MODULE_CONFIG.BaseConfig.PATH_CONFIGS))
-        json.dump(MODULE_CONFIG_DATA, open(f"{self.cur_exp_dir}/configs/base_config.json", 'w'),indent=2)
+        Directories.mkdir(MODULE_CONFIG.BaseConfig.PATH_LOG)
+        Directories.mkdir(MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT)
+        Directories.mkdir(MODULE_CONFIG.BaseConfig.PATH_GRAPHS)
+        Directories.mkdir(MODULE_CONFIG.BaseConfig.PATH_CONFIGS)
+        json.dump(MODULE_CONFIG_DATA, open(f"{self.cur_exp_dir}/configs/base_config.json", 'w'), indent=2)
         json.dump(self.config, open(f"{self.cur_exp_dir}/configs/pipeline_config.json", 'w'), indent=2)
         json.dump(self.experiments_meta, open(
             MODULE_CONFIG.BaseConfig.BASE_DIR + "/" + MODULE_CONFIG.BaseConfig.EXPERIMENTS_META_NAME + '.json', 'w'),
@@ -148,12 +157,17 @@ class Pipeline(object):
         # TODO: setup the directory structure that corresponds to this experiment
         if not MODULE_CONFIG.BaseConfig.DRY_RUN:
             self.create_experiments_dir()
-        # launch the performance probing thread
-        self.performanceProbingThread.start()
-        # start the training process (blocking)
-        self.train_agent.train(False)
-        # stop the performance probing thread
-        self.performanceProbingThread.stop()
+        try:
+            self.performanceProbingThread.start()
+            # start the training process (blocking)
+            os.system(
+                f"tensorboard --logdir {MODULE_CONFIG.BaseConfig.PATH_GRAPHS} --port {MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT} > {MODULE_CONFIG.BaseConfig.PATH_LOG}/tb.log 2>&1 &")
+            logger.info(f"Starting tensorboard @ http://localhost:{MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT}/#scalars")
+            self.train_agent.train(False)
+            # stop the performance probing thread
+            self.performanceProbingThread.stop()
+        except KeyboardInterrupt:
+            self.cleanup()
 
     @typechecked
     def resume(self, checkpoint: int, destructive: bool):
@@ -171,11 +185,20 @@ class Pipeline(object):
         # TODO 2: resolve the name of the checkpoint folder and get the agent's (directory operations)
         # TODO 3: if destructive, remove the checkpoints that come after the one that was loaded
         # launch the performance probing thread
-        self.performanceProbingThread.start()
-        # start the training process (blocking)
-        self.train_agent.train(True)
-        # stop the performance probing thread
-        self.performanceProbingThread.stop()
+        try:
+            self.performanceProbingThread.start()
+            # start the training process (blocking)
+            os.system(
+                f"tensorboard --logdir {MODULE_CONFIG.BaseConfig.PATH_GRAPHS} --port {MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT}")
+            logger.info(f"Starting tensorboard @ http://localhost:{MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT}/#scalars")
+            self.train_agent.train(True)
+            # stop the performance probing thread
+            self.performanceProbingThread.stop()
+        except KeyboardInterrupt:
+            self.cleanup()
+
+    def cleanup(self):
+        os.system(f"kill -9 $(lsof -t -i:{MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT} -sTCP:LISTEN)")
 
     def collect_garbage(self):
         """

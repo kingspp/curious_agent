@@ -47,6 +47,8 @@ class BaseConfig(object):
             self.PATH_CONFIGS= base_config['path']['configs']
             self._GLOBAL_LOGGING_CONFIG_FILE_PATH = os.path.join("/".join(__file__.split('/')[:-1]), 'config',
                                                                  'module_logging.yaml')
+            self.TENSORBOARD_SUMMARIES = base_config['tensorboard_summaries']
+            self.TENSORBOARD_PORT = base_config['tensorboard_port']
             self.PYTHON_OPTIMISE = base_config['python_optimise']
             self.DRY_RUN = base_config['dry_run']
             os.environ['PYTHONOPTIMIZE'] = str(self.PYTHON_OPTIMISE)
