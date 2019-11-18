@@ -11,6 +11,8 @@
     },
     "log_level": "DEBUG",
     "python_optimise": 1,
-    "dry_run": false
+    "dry_run": false,
+    "tensorboard_summaries": true,
+    "tensorboard_port": 7078
   }
 }

@@ -71,7 +71,7 @@ class DQNAgent(Agent):
 
         self.args.save_dir += f'/{self.exp_id}/'
         os.system(f"mkdir -p {self.args.save_dir}")
-        self.meta = DefaultMetaData(fp=open(os.path.join(self.args.save_dir, 'result.csv'), 'w'), args=self.args)
+        self.meta = None
         self.eps_delta = (self.args.eps - self.args.eps_min) / self.args.eps_decay_window
 
         # Create Policy and Target Networks
@@ -245,6 +245,7 @@ class DQNAgent(Agent):
         """
         ###########################
         # YOUR IMPLEMENTATION HERE #
+        self.meta = DefaultMetaData(fp=open(os.path.join(self.args.save_dir, 'result.csv'), 'w'), args=self.args)
         self.t = 1
         self.mode = "Random"
         train_start = time.time()
@@ -284,6 +285,8 @@ class DQNAgent(Agent):
                 # Store the transition in memory
                 self.replay_buffer.push(state, torch.tensor([int(action)]), next_state, reward,
                                         torch.tensor([done], dtype=torch.float32))
+                self.meta.update_step(self.t, self.cur_eps, self.reward_list[-1], self.max_q_list[-1],
+                                      self.loss_list[-1], self.args.lr)
 
                 # Increment step and Episode Length
                 self.t += 1
@@ -299,9 +302,9 @@ class DQNAgent(Agent):
             self.loss_list[-1] /= self.ep_len
 
             # Update meta
-            self.meta.update(i_episode, self.t, time.time() - start_time, time.time() - train_start,
-                             self.ep_len, len(self.replay_buffer.memory), self.cur_eps,
-                             self.reward_list[-1], np.mean(self.reward_list),
-                             self.max_q_list[-1], np.mean(self.max_q_list),
-                             self.loss_list[-1], np.mean(self.loss_list),
-                             self.mode)
+            self.meta.update_episode(i_episode, self.t, time.time() - start_time, time.time() - train_start,
+                                     self.ep_len, len(self.replay_buffer.memory), self.cur_eps,
+                                     self.reward_list[-1], np.mean(self.reward_list),
+                                     self.max_q_list[-1], np.mean(self.max_q_list),
+                                     self.loss_list[-1], np.mean(self.loss_list),
+                                     self.mode, self.args.lr)
