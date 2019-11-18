@@ -15,6 +15,8 @@ import time
 from curious_agent.agents import Agent
 from curious_agent.environments import Environment
 from curious_agent.stats_recorders.stats_recorder import StatsRecorder
+from munch import Munch
+import json
 
 
 class Pipeline(object):
@@ -30,17 +32,20 @@ class Pipeline(object):
 
     """
 
-    @typechecked
-    def __init__(self, train_agent: Agent, test_agent: Agent, test_environment: Environment):
+    def __init__(self, train_agent: Agent,
+                 environment: Environment,
+                 config: Munch,
+                 test_agent: Agent = None, test_environment: Environment = None):
+        self.config = config
         self.train_agent = train_agent
         self.test_environment = test_environment
         # different agent and environment references to avoid data-races
         self.stats_recorder = StatsRecorder(test_agent, test_environment)
         # make sure that we do not let the environment be used by the agent.
-        assert self.agent.env != self.test_environment, "The agent and environment in the pipeline's arguments " \
-                                                        "should not be related. Use a new instance of the environment."
-        # make sure that the train agent and test agent are of the same type
-        assert isinstance(test_agent, train_agent), "The train and test agent should be of the same type."
+        # assert self.agent.env != self.test_environment, "The agent and environment in the pipeline's arguments " \
+        #                                                 "should not be related. Use a new instance of the environment."
+        # # make sure that the train agent and test agent are of the same type
+        # assert isinstance(test_agent, train_agent), "The train and test agent should be of the same type."
 
         class PerformanceProbingThread(threading.Thread):
             """Class defining the behavior of the performance probing thread
@@ -48,6 +53,7 @@ class Pipeline(object):
             This thread keeps calling the "test" function at an interval determined in the constructor
 
             """
+
             @typechecked
             def __init__(self, pipeline: Pipeline, interval: int):
                 """ Performance probing thread constructor

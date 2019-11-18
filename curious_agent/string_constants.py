@@ -12,17 +12,7 @@
 ..todo::
     --
 """
-import enum
-from enum import auto
 
 
-class SampleConstant(enum):
-    """"
-    | **@author:** Prathyush SP,
-    |
-    | Sample Constants
-    """
-    CONSTANT_1 = auto()
-    CONSTANT_2 = auto()
-    CONSTANT_3 = auto()
-    CONSTANT_4 = auto()
+
+

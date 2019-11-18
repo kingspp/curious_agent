@@ -1,2 +1,1 @@
-from .agent import Agent
-import curious_agent.agents.open_ai_agents
+from curious_agent.agents.agent import Agent

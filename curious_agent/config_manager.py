@@ -42,7 +42,6 @@ class BaseConfig(object):
             self._GLOBAL_LOGGING_CONFIG_FILE_PATH = os.path.join("/".join(__file__.split('/')[:-1]), 'config',
                                                                  'module_logging.yaml')
             self.PYTHON_OPTIMISE = base_config['python_optimise']
-            self.GC_FREQUENCY = base_config['gc_frequency']
             os.environ['PYTHONOPTIMIZE'] = str(self.PYTHON_OPTIMISE)
         except KeyError as ke:
             raise Exception('Key Error. Config Error', ke)
@@ -67,7 +66,7 @@ class ConfigManager(metaclass=Singleton):
             raise Exception(
                 'Configuration file path error. Please provide configuration file path: ' + config_file_path, e)
         try:
-            self.BaseConfig = BaseConfig(MODULE_CONFIG_DATA['common_config'])
+            self.BaseConfig = BaseConfig(MODULE_CONFIG_DATA['base_config'])
         except KeyError as ke:
             raise Exception('Key not found. ', ke)
 
