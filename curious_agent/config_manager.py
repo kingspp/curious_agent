@@ -22,6 +22,7 @@ import json
 from . import setup_logging
 from curious_agent import Singleton
 from curious_agent import string_constants as constants
+from curious_agent import MODULE_PATH
 
 logger = logging.getLogger(__name__)
 
@@ -38,10 +39,16 @@ class BaseConfig(object):
         try:
 
             self.LOG_LEVEL = base_config['log_level']
+            self.BASE_DIR = MODULE_PATH+'/../experiments' if base_config['base_dir'] == "" else base_config['base_dir']
+            self.EXPERIMENTS_META_NAME = base_config['experiments_meta_name']
             self.PATH_LOG = base_config['path']['logs']
+            self.PATH_CHECKPOINT = base_config['path']['checkpoint']
+            self.PATH_GRAPHS = base_config['path']['graphs']
+            self.PATH_CONFIGS= base_config['path']['configs']
             self._GLOBAL_LOGGING_CONFIG_FILE_PATH = os.path.join("/".join(__file__.split('/')[:-1]), 'config',
                                                                  'module_logging.yaml')
             self.PYTHON_OPTIMISE = base_config['python_optimise']
+            self.DRY_RUN = base_config['dry_run']
             os.environ['PYTHONOPTIMIZE'] = str(self.PYTHON_OPTIMISE)
         except KeyError as ke:
             raise Exception('Key Error. Config Error', ke)
@@ -55,16 +62,8 @@ class ConfigManager(metaclass=Singleton):
     """
 
     @typechecked
-    def __init__(self, config_file_path: str):
+    def __init__(self, module_config: OrderedDict):
         # todo: Test Support for multiple dl frameworks
-        global MODULE_CONFIG_DATA
-        try:
-            MODULE_CONFIG_DATA = json.load(open(config_file_path), object_pairs_hook=OrderedDict)
-        except Exception as e:
-            logger.critical(
-                'Configuration file path error. Please provide configuration file path: {}'.format(config_file_path))
-            raise Exception(
-                'Configuration file path error. Please provide configuration file path: ' + config_file_path, e)
         try:
             self.BaseConfig = BaseConfig(MODULE_CONFIG_DATA['base_config'])
         except KeyError as ke:
@@ -99,30 +98,17 @@ class ConfigManager(metaclass=Singleton):
         """
         logger.info("Updating Library Logging configuration - Config File:{}".format(config_file_path))
         setup_logging(default_path=config_file_path)
-        self.CommonConfig._GLOBAL_LOGGING_CONFIG_FILE_PATH = config_file_path
-
-
-class PrathyushConfig():
-    pass
-
-
-class SinanConfig(object):
-    def __init__(self, var_1: int, var_2: str):
-        pass
-
-
-class ShreeshaConfig():
-    pass
-
-
-class RameshConfig():
-    pass
-
-
-class MahdiConfig():
-    pass
+        self.BaseConfig._GLOBAL_LOGGING_CONFIG_FILE_PATH = config_file_path
 
 
 ConfigPath = os.path.join("/".join(__file__.split('/')[:-1]), 'config', 'base_config.json')
-MODULE_CONFIG = ConfigManager(config_file_path=ConfigPath).get_config_manager()
-MODULE_CONFIG_DATA = OrderedDict()
+try:
+    MODULE_CONFIG_DATA = json.load(open(ConfigPath), object_pairs_hook=OrderedDict)
+except Exception as e:
+    logger.critical(
+        'Configuration file path error. Please provide configuration file path: {}'.format(ConfigPath))
+    raise Exception(
+        'Configuration file path error. Please provide configuration file path: ' + ConfigPath, e)
+
+MODULE_CONFIG = ConfigManager(module_config=MODULE_CONFIG_DATA).get_config_manager()
+

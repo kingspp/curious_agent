@@ -17,6 +17,9 @@ from curious_agent.environments import Environment
 from curious_agent.stats_recorders.stats_recorder import StatsRecorder
 from munch import Munch
 import json
+from curious_agent import MODULE_CONFIG, MODULE_CONFIG_DATA
+from curious_agent.util import Directories, File
+import os
 
 
 class Pipeline(object):
@@ -36,6 +39,7 @@ class Pipeline(object):
                  environment: Environment,
                  config: Munch,
                  test_agent: Agent = None, test_environment: Environment = None):
+        self.name = config['pipeline_name']
         self.config = config
         self.train_agent = train_agent
         self.test_environment = test_environment
@@ -46,6 +50,11 @@ class Pipeline(object):
         #                                                 "should not be related. Use a new instance of the environment."
         # # make sure that the train agent and test agent are of the same type
         # assert isinstance(test_agent, train_agent), "The train and test agent should be of the same type."
+        self.experiments_meta = {"experiments": {}}
+        self.current_experiments_meta = {"runs": 0}
+        self.cur_exp_dir = ""
+        if not MODULE_CONFIG.BaseConfig.DRY_RUN:
+            self.create_base_directories()
 
         class PerformanceProbingThread(threading.Thread):
             """Class defining the behavior of the performance probing thread
@@ -85,6 +94,34 @@ class Pipeline(object):
 
         self.performanceProbingThread = PerformanceProbingThread(self, 10)
 
+    def create_base_directories(self):
+        Directories.mkdir(MODULE_CONFIG.BaseConfig.BASE_DIR)
+        meta_file = MODULE_CONFIG.BaseConfig.BASE_DIR + "/" + MODULE_CONFIG.BaseConfig.EXPERIMENTS_META_NAME + '.json'
+        try:
+            if File.is_exist(meta_file):
+                self.experiments_meta = json.load(open(meta_file))
+                if self.name in self.experiments_meta['experiments']:
+                    self.current_experiments_meta = self.experiments_meta['experiments'][self.name]
+        except:
+            pass
+
+    def create_experiments_dir(self):
+        self.current_experiments_meta['runs'] += 1
+        self.experiments_meta['experiments'][self.name] = self.current_experiments_meta
+        Directories.mkdir(os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, self.name))
+        self.cur_exp_dir = os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, self.name,
+                                        str(self.current_experiments_meta['runs']))
+        Directories.mkdir(self.cur_exp_dir)
+        Directories.mkdir(os.path.join(self.cur_exp_dir, MODULE_CONFIG.BaseConfig.PATH_LOG))
+        Directories.mkdir(os.path.join(self.cur_exp_dir, MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT))
+        Directories.mkdir(os.path.join(self.cur_exp_dir, MODULE_CONFIG.BaseConfig.PATH_GRAPHS))
+        Directories.mkdir(os.path.join(self.cur_exp_dir, MODULE_CONFIG.BaseConfig.PATH_CONFIGS))
+        json.dump(MODULE_CONFIG_DATA, open(f"{self.cur_exp_dir}/configs/base_config.json", 'w'),indent=2)
+        json.dump(self.config, open(f"{self.cur_exp_dir}/configs/pipeline_config.json", 'w'), indent=2)
+        json.dump(self.experiments_meta, open(
+            MODULE_CONFIG.BaseConfig.BASE_DIR + "/" + MODULE_CONFIG.BaseConfig.EXPERIMENTS_META_NAME + '.json', 'w'),
+                  indent=2)
+
     @abstractmethod
     @typechecked
     def performance_stats(self):
@@ -108,6 +145,10 @@ class Pipeline(object):
         :return: void
         """
         # TODO: setup the directory structure that corresponds to this experiment
+        if not MODULE_CONFIG.BaseConfig.DRY_RUN:
+            self.create_experiments_dir()
+        exit()
+
         # launch the performance probing thread
         self.performanceProbingThread.start()
         # start the training process (blocking)

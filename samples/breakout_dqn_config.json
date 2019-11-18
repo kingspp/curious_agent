@@ -1,6 +1,9 @@
 {
+  "pipeline_name": "breakout_dqn",
+  "description": "",
   "env_config": {
-    "env_name": "BreakoutNoFrameskip-v4"
+    "env_name": "BreakoutNoFrameskip-v4",
+    "description": ""
   },
   "agent_config": {
     "max_episodes": 10000000,
@@ -22,6 +25,6 @@
     "save_dir": "checkpoint",
     "use_pri_buffer": true,
     "use_double_dqn": true,
-    "use_bnorm":false
+    "use_bnorm": false
   }
 }
