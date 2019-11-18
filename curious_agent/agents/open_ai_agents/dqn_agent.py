@@ -20,6 +20,10 @@ from curious_agent.environments.open_ai.atari_environments.open_ai_environment i
 from curious_agent.buffers import PrioritizedBuffer, ReplayBuffer
 from curious_agent.meta.default_meta import DefaultMetaData
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 torch.manual_seed(595)
 np.random.seed(595)
@@ -95,9 +99,9 @@ class DQNAgent(Agent):
         #     self.load_model()
 
         if args.use_pri_buffer:
-            print('Using priority buffer . . .')
+            logger.info('Using priority buffer . . .')
         if args.use_double_dqn:
-            print('Using double dqn . . .')
+            logger.info('Using double dqn . . .')
 
     def init_game_setting(self):
         """

@@ -8,6 +8,8 @@ from typing import List, Union, Dict
 import subprocess
 from collections import Counter, OrderedDict
 from datetime import datetime
+from curious_agent import MODULE_CONFIG
+import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -433,3 +435,30 @@ class TimeUtils(object):
             :return: Hours
             """
             return float(TimeUtils.TimeDelta.calculate_seconds(dt) / (60 * 60))
+
+
+
+def add_logs_to_tmp(path: str):
+    """
+    | **@author:** Prathyush SP
+    | Add logs to the path
+    :param path: Path where logs has to store
+    """
+    # noinspection PyProtectedMember
+    with open(MODULE_CONFIG.BaseConfig._GLOBAL_LOGGING_CONFIG_FILE_PATH, 'rt') as f:
+        config = yaml.safe_load(f.read())
+        keys = [key for key in config['handlers'].keys()]
+        for key in keys:
+            if 'filename' in config['handlers'][key].keys():
+                log_path = config['handlers'][key]['filename']
+                log_path = log_path.split('/')
+                try:
+                    with open(path + '/' + log_path[-1], 'w') as log_file_path:
+                        with open(config['handlers'][key]['filename']) as file_path:
+                            [log_file_path.write(line) for line in file_path.readlines()]
+                            os.remove(config['handlers'][key]['filename'])
+                except FileNotFoundError or Exception as e:
+                    # logging.warning('Logging Files not found!!')
+                    pass
+                config['handlers'][key]['filename'] = path + '/' + log_path[-1]
+        logging.config.dictConfig(config)

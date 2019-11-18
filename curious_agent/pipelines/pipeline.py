@@ -20,7 +20,7 @@ import json
 from curious_agent import MODULE_CONFIG, MODULE_CONFIG_DATA
 from curious_agent.util import Directories, File
 import os
-
+from curious_agent.util import add_logs_to_tmp
 
 class Pipeline(object):
     """Class defining shared functionality that environments have to implement to implement specific RL algorithms'
@@ -121,6 +121,7 @@ class Pipeline(object):
         json.dump(self.experiments_meta, open(
             MODULE_CONFIG.BaseConfig.BASE_DIR + "/" + MODULE_CONFIG.BaseConfig.EXPERIMENTS_META_NAME + '.json', 'w'),
                   indent=2)
+        add_logs_to_tmp(path=os.path.join(self.cur_exp_dir, MODULE_CONFIG.BaseConfig.PATH_LOG))
 
     @abstractmethod
     @typechecked
@@ -147,8 +148,6 @@ class Pipeline(object):
         # TODO: setup the directory structure that corresponds to this experiment
         if not MODULE_CONFIG.BaseConfig.DRY_RUN:
             self.create_experiments_dir()
-        exit()
-
         # launch the performance probing thread
         self.performanceProbingThread.start()
         # start the training process (blocking)
