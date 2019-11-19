@@ -5,7 +5,7 @@ from abc import ABCMeta, abstractmethod
 import os
 import torch
 import logging
-
+from curious_agent.util import generate_uuid
 
 logger = logging.getLogger(__name__)
 
@@ -14,14 +14,14 @@ class Model(nn.Module, metaclass=ABCMeta):
     """Model Abstract Class
     """
 
-    def __init__(self, name: str, env, args):
+    def __init__(self, env, args, name: str = ''):
         """
         You can add additional arguments as you need.
         In the constructor we instantiate modules and assign them as
         member variables.
         """
         super(Model, self).__init__()
-        self.name = name
+        self.name =  name
 
     @abstractmethod
     def forward(self, inp):
@@ -32,18 +32,16 @@ class Model(nn.Module, metaclass=ABCMeta):
         """
         pass
 
-    def save_model(self, i_episode):
+    def save(self, file_name_with_path):
         """
         Save Model based on condition
         :param i_episode: Episode Number
         """
+        with open(file_name_with_path, 'wb') as f:
+            torch.save(self, f)
+        logger.info(f"{self.name} saved successfully at {file_name_with_path}")
 
-        model_file = os.path.join(self.args.save_dir, f'model_e{i_episode}.th')
-        with open(model_file, 'wb') as f:
-            torch.save(self.policy_net, f)
-        logger.info(f"{self.model} saved successfully at {model_file}")
-
-    def load_model(self):
+    def load(self):
         """
         Load Model
         :return:

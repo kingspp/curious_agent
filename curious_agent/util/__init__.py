@@ -10,6 +10,7 @@ from collections import Counter, OrderedDict
 from datetime import datetime
 from curious_agent import MODULE_CONFIG
 import yaml
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -462,3 +463,17 @@ def add_logs_to_tmp(path: str):
                     pass
                 config['handlers'][key]['filename'] = path + '/' + log_path[-1]
         logging.config.dictConfig(config)
+
+
+def generate_uuid(name: str = '') -> str:
+    """
+    | **@author:** Prathyush SP
+    |
+    | Generate Unique ID
+    :param name: UID Name
+    :return: Unique ID
+    """
+    if name!="":
+        return '_'.join([name, str(uuid.uuid4().hex)])
+    else:
+        return str(uuid.uuid4().hex)

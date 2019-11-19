@@ -9,14 +9,69 @@ from abc import ABCMeta, abstractmethod
 from munch import Munch
 from typeguard import typechecked
 import numpy as np
+import os
+import logging
+import torch
+from curious_agent.models import Model
+from weakref import ref
+from curious_agent import MODULE_CONFIG
+import json
+from curious_agent.util import CustomJsonEncoder
+from curious_agent.meta.default_meta import DefaultMetaData
 
+logger = logging.getLogger(__name__)
+
+
+# def register_models(f, always: bool = False):
+#     """
+#     | **@author:** Prathyush SP
+#     |
+#     | Key Exception Decorator.
+#     :param f: Function
+#     :return: Function Return Parameter
+#     """
+#
+#     if f is None:
+#         return partial(keyexception, always=always)
+#
+#     @wraps(f)
+#     def wrapped(*args, **kwargs):
+#         try:
+#             r = f(*args, **kwargs)
+#             return r
+#         except KeyError as ke:
+#             # _matches = re.findall(r'\[(.*?)\]', message.__str__())
+#             #
+#             # for k, v in message.items():
+#             #     print(k)
+#             # print(_matches)
+#
+#             # _message = {_matches[k]: v for k,v  in message.items() if k in _matches}
+#             # print(_message, _matches[0], message.__str__())
+#             # exit()
+#             # # _message = message.format(**{k:v for k,v in kwargs.items()  if k in _matches}) if len(_matches) > 0 else message
+#             # import traceback
+#             # print('keys:', ke)
+#             # print(traceback.format_exc())
+#             #
+#             # if component_name and message:
+#             #     logger.error(_message)
+#             #     raise RztdlException(component_name=component_name, message=_message, errors=ke)
+#             # else:
+#             #     logger.error('Key Error - Attribute: {} Value:{}'.format(
+#             #         [k for k, v in kwargs.items() if v == ke.__str__().strip().replace('\'', '')], ke))
+#             raise ke
+#
+#     return wrapped
 
 class Agent(metaclass=ABCMeta):
 
     @typechecked
-    def __init__(self, env: Environment):
+    def __init__(self, env: Environment, agent_config: dict):
         self.env = env
-        self.state = Munch()
+        self.state = Munch({"config": agent_config})
+        self._models = None
+        self.meta = DefaultMetaData
 
     @abstractmethod
     def make_action(self, observation: np.array, test: bool = True):
@@ -83,7 +138,7 @@ class Agent(metaclass=ABCMeta):
         """Method that loads the state variables and the models to enable the experiment to continue from a halted
         state
 
-        This method affects the self.state and self.models variables.
+        This method affects the self.state.config and self.models variables.
 
         :note: notice how this is not an abstract function; you don't need to implement it
 
@@ -93,8 +148,14 @@ class Agent(metaclass=ABCMeta):
         """
         raise NotImplementedError
 
+    def register_models(self):
+        self._models = {}
+        for k, v in self.__dict__.items():
+            if isinstance(v, Model):
+                self._models[k if v.name == "" else v.name] = ref(v)()
+
     @typechecked
-    def save(self):
+    def save(self, i_episode):
         """Method that saves the models and state variables to enable the safe halting and resumption of experiments
 
         This method's side effect is only restricted to the file-system.
@@ -103,4 +164,13 @@ class Agent(metaclass=ABCMeta):
 
         :return: void
         """
-        raise NotImplementedError
+        if i_episode % self.state.config.save_freq == 0:
+            if self._models is None:
+                self.register_models()
+            for k, model in self._models.items():
+                model.save(
+                    file_name_with_path=os.path.join(MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT,
+                                                     f'e_{i_episode}_{k if model.name == "" else model.name}.th'))
+
+            with open(os.path.join(MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT, f"e_{i_episode}.meta"), 'w') as f:
+                json.dump(self.state, f, cls=CustomJsonEncoder)
