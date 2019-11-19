@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 import torch.nn as nn
 import torch.nn.functional as F
+from curious_agent.models import Model
 
 
-class CNNModel(nn.Module):
+class CNNModel(Model):
     """Initialize a deep Q-learning network
     
     Hints:
@@ -21,7 +22,7 @@ class CNNModel(nn.Module):
         In the constructor we instantiate modules and assign them as
         member variables.
         """
-        super(CNNModel, self).__init__()
+        super(CNNModel, self).__init__(env=env, args=args)
         self.args = args
         self.num_actions = env.action_space.n
         self.head = nn.Sequential(

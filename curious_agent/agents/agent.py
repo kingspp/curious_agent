@@ -5,20 +5,31 @@ DO NOT revise this file
 
 """
 from curious_agent.environments.environment import Environment
-from curious_agent.models.model import Model
 from abc import ABCMeta, abstractmethod
 from munch import Munch
 from typeguard import typechecked
 import numpy as np
+import os
+import logging
+import torch
+from curious_agent.models import Model
+from weakref import ref
+from curious_agent import MODULE_CONFIG
+import json
+from curious_agent.util import CustomJsonEncoder
+from curious_agent.meta.default_meta import DefaultMetaData
+
+logger = logging.getLogger(__name__)
 
 
 class Agent(metaclass=ABCMeta):
 
     @typechecked
-    def __init__(self, env: Environment):
+    def __init__(self, env: Environment, agent_config: dict):
         self.env = env
-        self.state = Munch()
-        self.models = Munch()
+        self.state = Munch({"config": agent_config})
+        self._models = None
+        self.meta = DefaultMetaData
 
     @abstractmethod
     def make_action(self, observation: np.array, test: bool = True):
@@ -85,7 +96,7 @@ class Agent(metaclass=ABCMeta):
         """Method that loads the state variables and the models to enable the experiment to continue from a halted
         state
 
-        This method affects the self.state and self.models variables.
+        This method affects the self.state.config and self.models variables.
 
         :note: notice how this is not an abstract function; you don't need to implement it
 
@@ -95,8 +106,14 @@ class Agent(metaclass=ABCMeta):
         """
         raise NotImplementedError
 
+    def register_models(self):
+        self._models = {}
+        for k, v in self.__dict__.items():
+            if isinstance(v, Model):
+                self._models[k if v.name == "" else v.name] = ref(v)()
+
     @typechecked
-    def save(self, path: str):
+    def save(self, i_episode):
         """Method that saves the models and state variables to enable the safe halting and resumption of experiments
 
         This method's side effect is only restricted to the file-system.
@@ -107,14 +124,13 @@ class Agent(metaclass=ABCMeta):
 
         :return: void
         """
-        raise NotImplementedError
+        if i_episode % self.state.config.save_freq == 0:
+            if self._models is None:
+                self.register_models()
+            for k, model in self._models.items():
+                model.save(
+                    file_name_with_path=os.path.join(MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT,
+                                                     f'e_{i_episode}_{k if model.name == "" else model.name}.th'))
 
-    @typechecked
-    def add_model(self, model: Model):
-        """Method that provides a clean interface to add a model to the Munch models data-member
-
-        :param model: the model that is to be added to the models data-member
-
-        :return: void
-        """
-        pass
+            with open(os.path.join(MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT, f"e_{i_episode}.meta"), 'w') as f:
+                json.dump(self.state, f, cls=CustomJsonEncoder)

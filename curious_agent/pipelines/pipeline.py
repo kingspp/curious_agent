@@ -135,6 +135,10 @@ class Pipeline(object):
         # directories.
         self.cur_exp_dir = os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, self.name,
                                         str(self.current_experiments_meta['runs']))
+        json.dump(self.experiments_meta, open(
+            MODULE_CONFIG.BaseConfig.BASE_DIR + "/" + MODULE_CONFIG.BaseConfig.EXPERIMENTS_META_NAME + '.json', 'w'),
+                  indent=2)
+        MODULE_CONFIG.BaseConfig.BASE_DIR = self.cur_exp_dir
         path_configs = MODULE_CONFIG.BaseConfig.PATH_CONFIGS
         MODULE_CONFIG.BaseConfig.PATH_LOG = os.path.join(self.cur_exp_dir, MODULE_CONFIG.BaseConfig.PATH_LOG)
         MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT = os.path.join(self.cur_exp_dir,
