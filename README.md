@@ -13,7 +13,19 @@ large-scale-curiosity implementation and improvements-
 2. PyTorch
 3. Open AI
 
-<-- TBD -->
+#### Guidelines
+
+1. Do not use ```print``` function. Instead use
+```python
+# Create logger object
+import logging
+logger = logging.getLogger(__name__)
+
+# Log according to the needs.
+logger.info("Hello World")
+```
+
+2. 
 
 
   
