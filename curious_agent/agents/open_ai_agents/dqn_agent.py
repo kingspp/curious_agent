@@ -24,7 +24,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 torch.manual_seed(595)
 np.random.seed(595)
 random.seed(595)
@@ -208,7 +207,7 @@ class DQNAgent(Agent):
         if i_episode % self.args.save_freq == 0:
             model_file = os.path.join(self.args.save_dir, f'model_e{i_episode}.th')
             meta_file = os.path.join(self.args.save_dir, f'model_e{i_episode}.meta')
-            print(f"Saving model at {model_file}")
+            logger.info(f"Saving model at {model_file}")
             with open(model_file, 'wb') as f:
                 torch.save(self.policy_net, f)
             with open(meta_file, 'w') as f:
@@ -219,7 +218,7 @@ class DQNAgent(Agent):
         Load Model
         :return:
         """
-        print(f"Restoring model from {self.args.load_dir} . . . ")
+        logger.info(f"Restoring model from {self.args.load_dir} . . . ")
         self.policy_net = torch.load(self.args.load_dir,
                                      map_location=torch.device(self.args.device)).to(self.args.device)
         self.target_net.load_state_dict(self.policy_net.state_dict())
@@ -228,7 +227,7 @@ class DQNAgent(Agent):
             self.t = self.meta.data.step
         else:
             self.cur_eps = 0.01
-        print(f"Model successfully restored.")
+        logger.info(f"Model successfully restored.")
 
     def collect_garbage(self, i_episode):
         """
@@ -236,7 +235,7 @@ class DQNAgent(Agent):
         :param i_episode: Episode Number
         """
         if i_episode % self.args.gc_freq == 0:
-            print("Executing garbage collector . . .")
+            logger.info("Executing garbage collector . . .")
             gc.collect()
 
     def train(self, persist):
@@ -270,7 +269,7 @@ class DQNAgent(Agent):
             while not done:
                 # Update the target network, copying all weights and biases in DQN
                 if self.t % self.args.target_update == 0:
-                    print("Updating target network . . .")
+                    logger.info("Updating target network . . .")
                     self.target_net.load_state_dict(self.policy_net.state_dict())
                 # Select and perform an action
                 self.cur_eps = max(self.args.eps_min, self.args.eps - self.eps_delta * self.t)

@@ -4,7 +4,7 @@ from curious_agent.util.custom_json_encoder import CustomJsonEncoder
 import logging
 from humanize import naturaltime
 from curious_agent import MODULE_CONFIG
-import os
+
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class DefaultMetaData(object):
         """
         self.episode_data = self.episode_template(*args)
         if self.episode_data.episode % self.args.disp_freq == 0:
-            print(
+            logger.info(
                 f"E: {self.episode_data.episode} | M: {self.episode_data.buffer_len} |  Step: {self.episode_data.step} "
                 f"| T: {self.episode_data.time:.2f} | Len: {self.episode_data.ep_len} | EPS: {self.episode_data.epsilon:.5f} "
                 f"| LR: {self.episode_data.lr:.7f} | R: {self.episode_data.reward} | AR: {self.episode_data.avg_reward:.3f} "
