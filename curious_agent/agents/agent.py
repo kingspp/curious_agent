@@ -22,48 +22,6 @@ from curious_agent.meta.default_meta import DefaultMetaData
 logger = logging.getLogger(__name__)
 
 
-# def register_models(f, always: bool = False):
-#     """
-#     | **@author:** Prathyush SP
-#     |
-#     | Key Exception Decorator.
-#     :param f: Function
-#     :return: Function Return Parameter
-#     """
-#
-#     if f is None:
-#         return partial(keyexception, always=always)
-#
-#     @wraps(f)
-#     def wrapped(*args, **kwargs):
-#         try:
-#             r = f(*args, **kwargs)
-#             return r
-#         except KeyError as ke:
-#             # _matches = re.findall(r'\[(.*?)\]', message.__str__())
-#             #
-#             # for k, v in message.items():
-#             #     print(k)
-#             # print(_matches)
-#
-#             # _message = {_matches[k]: v for k,v  in message.items() if k in _matches}
-#             # print(_message, _matches[0], message.__str__())
-#             # exit()
-#             # # _message = message.format(**{k:v for k,v in kwargs.items()  if k in _matches}) if len(_matches) > 0 else message
-#             # import traceback
-#             # print('keys:', ke)
-#             # print(traceback.format_exc())
-#             #
-#             # if component_name and message:
-#             #     logger.error(_message)
-#             #     raise RztdlException(component_name=component_name, message=_message, errors=ke)
-#             # else:
-#             #     logger.error('Key Error - Attribute: {} Value:{}'.format(
-#             #         [k for k, v in kwargs.items() if v == ke.__str__().strip().replace('\'', '')], ke))
-#             raise ke
-#
-#     return wrapped
-
 class Agent(metaclass=ABCMeta):
 
     @typechecked
@@ -134,7 +92,7 @@ class Agent(metaclass=ABCMeta):
         raise NotImplementedError
 
     @typechecked
-    def load(self, checkpoint_folder: str):
+    def load(self, path: str):
         """Method that loads the state variables and the models to enable the experiment to continue from a halted
         state
 
@@ -142,8 +100,8 @@ class Agent(metaclass=ABCMeta):
 
         :note: notice how this is not an abstract function; you don't need to implement it
 
-        :param checkpoint_folder: the location of the checkpoint folder on disk (ideally relative to the working
-        directory)
+        :param path: the name of the file on the disk (ideally relative to the working directory)
+
         :return: void
         """
         raise NotImplementedError
@@ -161,6 +119,8 @@ class Agent(metaclass=ABCMeta):
         This method's side effect is only restricted to the file-system.
 
         :note: notice how this is not an abstract function; you don't need to implement it
+
+        :param path: the name of the file on the disk (ideally relative to the working directory)
 
         :return: void
         """
