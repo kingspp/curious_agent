@@ -187,22 +187,22 @@ class Pipeline(object):
 
         :return: void
         """
-        # if not MODULE_CONFIG.BaseConfig.DRY_RUN:
-        #     self.create_experiments_dir(is_continuing=False)
-        run = -2
-        checkpoint = 1
-        runs = []
-        for fs_object in os.listdir(os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, self.name)):
-            # if os.path.isfile(fs_object):
-            runs.append(int(fs_object))
-        # validate that the index is not out of bounds
-        if run >= len(runs):
-            raise ValueError("The checkpoint has to be from 0 to " + str(len(list) - 1))
-        runs.sort()
-        run = str(runs[run])
-        print(os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, self.name, run, MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT, str(checkpoint)))
-
-        exit()
+        if not MODULE_CONFIG.BaseConfig.DRY_RUN:
+            self.create_experiments_dir(is_continuing=False)
+        # run = -2
+        # checkpoint = 1
+        # runs = []
+        # for fs_object in os.listdir(os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, self.name)):
+        #     # if os.path.isfile(fs_object):
+        #     runs.append(int(fs_object))
+        # # validate that the index is not out of bounds
+        # if run >= len(runs):
+        #     raise ValueError("The checkpoint has to be from 0 to " + str(len(list) - 1))
+        # runs.sort()
+        # run = str(runs[run])
+        # print(os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, self.name, run, MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT, str(checkpoint)))
+        #
+        # exit()
         try:
             if self.probing_enabled:
                 self.performanceProbingThread.start()
