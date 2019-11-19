@@ -124,7 +124,7 @@ class Pipeline(object):
             pass
 
     @typechecked
-    def create_experiments_dir(self):
+    def create_experiments_dir(self, is_continuing: bool):
         # increment the number of runs for this experiment
         self.current_experiments_meta['runs'] += 1
         # update the in-memory json experiments' meta
@@ -155,6 +155,9 @@ class Pipeline(object):
         json.dump(self.experiments_meta, open(
             MODULE_CONFIG.BaseConfig.BASE_DIR + "/" + MODULE_CONFIG.BaseConfig.EXPERIMENTS_META_NAME + '.json', 'w'),
                   indent=2)
+        if is_continuing:
+            json.dump('{"is_continuing": 1}', open(f"{self.cur_exp_dir}/{path_configs}/continued_training_info.json",
+                                                   'w'), indent=2)
         add_logs_to_tmp(path=os.path.join(self.cur_exp_dir, MODULE_CONFIG.BaseConfig.PATH_LOG))
 
     @typechecked
@@ -180,8 +183,22 @@ class Pipeline(object):
 
         :return: void
         """
-        if not MODULE_CONFIG.BaseConfig.DRY_RUN:
-            self.create_experiments_dir()
+        # if not MODULE_CONFIG.BaseConfig.DRY_RUN:
+        #     self.create_experiments_dir(is_continuing=False)
+        run = -2
+        checkpoint = 1
+        runs = []
+        for fs_object in os.listdir(os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, self.name)):
+            # if os.path.isfile(fs_object):
+            runs.append(int(fs_object))
+        # validate that the index is not out of bounds
+        if run >= len(runs):
+            raise ValueError("The checkpoint has to be from 0 to " + str(len(list) - 1))
+        runs.sort()
+        run = str(runs[run])
+        print(os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, self.name, run, MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT, str(checkpoint)))
+
+        exit()
         try:
             if self.probing_enabled:
                 self.performanceProbingThread.start()
@@ -199,20 +216,24 @@ class Pipeline(object):
             self.cleanup()
 
     @typechecked
-    def resume(self, checkpoint: int, destructive: bool):
+    def resume(self, run: int, checkpoint: int):
         """Methods that continues the training from previous checkpoints. Everything stored in the recommended ways for
         hot reloads in this framework is restored for training resumption
 
+        :param run: the index of the run to reload from. i.e. 0 is for the first checkpoint, -1 for the last one, etc...
         :param checkpoint: the index of the checkpoint to reload from. i.e. 0 is for the first checkpoint, -1 for the
-        last
-        :param destructive: bool that indicates if the future checkpoints beyond the one that gets loaded are removed
+        last one, etc...
 
         :note: if there are no checkpoints, the method simply returns.
 
         :return: void
         """
-        # TODO 1: reuse the directory structure that corresponds to this experiment
         # TODO 2: resolve the name of the checkpoint folder and get the agent's (directory operations)
+        if not MODULE_CONFIG.BaseConfig.DRY_RUN:
+            self.create_experiments_dir(is_continuing=True)
+        for fs_object in os.listdir(os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, self.name)):
+            if os.path.isdir(fs_object):
+                pass
         # TODO 3: if destructive, remove the checkpoints that come after the one that was loaded
         # launch the performance probing thread
         try:
