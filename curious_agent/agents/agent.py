@@ -5,6 +5,7 @@ DO NOT revise this file
 
 """
 from curious_agent.environments.environment import Environment
+from curious_agent.models.model import Model
 from abc import ABCMeta, abstractmethod
 from munch import Munch
 from typeguard import typechecked
@@ -17,6 +18,7 @@ class Agent(metaclass=ABCMeta):
     def __init__(self, env: Environment):
         self.env = env
         self.state = Munch()
+        self.models = Munch()
 
     @abstractmethod
     def make_action(self, observation: np.array, test: bool = True):
@@ -106,3 +108,13 @@ class Agent(metaclass=ABCMeta):
         :return: void
         """
         raise NotImplementedError
+
+    @typechecked
+    def add_model(self, model: Model):
+        """Method that provides a clean interface to add a model to the Munch models data-member
+
+        :param model: the model that is to be added to the models data-member
+
+        :return: void
+        """
+        pass
