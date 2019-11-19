@@ -13,7 +13,16 @@ from curious_agent.agents.agent import Agent
 
 
 class StatsRecorder(object):
+    """Abstract class that contains the definition of the abstract load and record functions that provide an interface
+    to produce statistics from an environment given an agent and an environment.
+
+    """
     def __init__(self, agent: Agent, env: Environment):
+        """
+
+        :param agent: a testing agent (should not be the same agent that is being trained)
+        :param env: a testing environment (should not be the same environment that is being used for training)
+        """
         self.agent = agent
         self.env = env
 

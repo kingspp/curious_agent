@@ -180,16 +180,16 @@ class Pipeline(object):
 
         :return: void
         """
-        # TODO: setup the directory structure that corresponds to this experiment
         if not MODULE_CONFIG.BaseConfig.DRY_RUN:
             self.create_experiments_dir()
         try:
             if self.probing_enabled:
                 self.performanceProbingThread.start()
-            # create file structure for TensorBoardX logging
-            os.system(
-                f"tensorboard --logdir {MODULE_CONFIG.BaseConfig.PATH_GRAPHS} --port {MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT} > {MODULE_CONFIG.BaseConfig.PATH_LOG}/tb.log 2>&1 &")
-            logger.info(f"Starting tensorboard @ http://localhost:{MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT}/#scalars")
+            if not MODULE_CONFIG.BaseConfig.DRY_RUN:
+                # create file structure for TensorBoardX logging
+                os.system(
+                    f"tensorboard --logdir {MODULE_CONFIG.BaseConfig.PATH_GRAPHS} --port {MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT} > {MODULE_CONFIG.BaseConfig.PATH_LOG}/tb.log 2>&1 &")
+                logger.info(f"Starting tensorboard @ http://localhost:{MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT}/#scalars")
             # start the training process (blocking)
             self.train_agent.train(False)
             if self.probing_enabled:
@@ -218,10 +218,11 @@ class Pipeline(object):
         try:
             if self.probing_enabled:
                 self.performanceProbingThread.start()
-            # create file structure for TensorBoardX logging
-            os.system(
-                f"tensorboard --logdir {MODULE_CONFIG.BaseConfig.PATH_GRAPHS} --port {MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT} > {MODULE_CONFIG.BaseConfig.PATH_LOG}/tb.log 2>&1 &")
-            logger.info(f"Starting tensorboard @ http://localhost:{MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT}/#scalars")
+            if not MODULE_CONFIG.BaseConfig.DRY_RUN:
+                # create file structure for TensorBoardX logging
+                os.system(
+                    f"tensorboard --logdir {MODULE_CONFIG.BaseConfig.PATH_GRAPHS} --port {MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT} > {MODULE_CONFIG.BaseConfig.PATH_LOG}/tb.log 2>&1 &")
+                logger.info(f"Starting tensorboard @ http://localhost:{MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT}/#scalars")
             # start the training process (blocking)
             self.train_agent.train(True)
             if self.probing_enabled:
