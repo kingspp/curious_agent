@@ -79,7 +79,7 @@ class Agent(metaclass=ABCMeta):
         raise NotImplementedError
 
     @typechecked
-    def load(self, checkpoint_folder: str):
+    def load(self, path: str):
         """Method that loads the state variables and the models to enable the experiment to continue from a halted
         state
 
@@ -87,19 +87,21 @@ class Agent(metaclass=ABCMeta):
 
         :note: notice how this is not an abstract function; you don't need to implement it
 
-        :param checkpoint_folder: the location of the checkpoint folder on disk (ideally relative to the working
-        directory)
+        :param path: the name of the file on the disk (ideally relative to the working directory)
+
         :return: void
         """
         raise NotImplementedError
 
     @typechecked
-    def save(self):
+    def save(self, path: str):
         """Method that saves the models and state variables to enable the safe halting and resumption of experiments
 
         This method's side effect is only restricted to the file-system.
 
         :note: notice how this is not an abstract function; you don't need to implement it
+
+        :param path: the name of the file on the disk (ideally relative to the working directory)
 
         :return: void
         """
