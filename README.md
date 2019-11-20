@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 logger.info("Hello World")
 ```
 
-2. Implement Train with the "Continuing" Idiomatic Restriction:
+2. Implement the "train" function with the "Continuing" Idiomatic Restriction:
 ```python
 
 
@@ -62,7 +62,7 @@ for self.state.i_episode in range(0, 100000):
     pass
 
 ```
-3. Use the **state** object when implementing the train function to store and retrieve state information
+3. Use the **state** object when implementing the "train" function to store and retrieve state information
 ```python
 # **OK!**: use the **state** munch object to store and retrieve all state information that the algorithm needs
 self.state.i_episode = self.state.i_episode + 1
