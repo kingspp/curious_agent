@@ -8,6 +8,7 @@ You DO NOT need to upload this file
 import numpy as np
 import time
 from cv2 import VideoWriter, VideoWriter_fourcc
+from gym.wrappers import Monitor
 
 from curious_agent.environments.environment import Environment
 # from curious_agent.agents.agent import Agent
@@ -34,6 +35,8 @@ class AtariEnvStatsRecorder(StatsRecorder):
         """
         self.agent = agent
         self.env = env
+        self.env.env = Monitor(self.env.env, './output', force=True)
+        # self.env.env = Monitor(self.env.env, './output', force=True)
         self.episodes_number = episodes_number
 
     def load(self, location):
@@ -69,7 +72,7 @@ class AtariEnvStatsRecorder(StatsRecorder):
         self.env.env.close()
 
         # turn the frames list into a video
-        four_cc = VideoWriter_fourcc(*'MP42')
+        four_cc = VideoWriter_fourcc(*'h264')
         frames_per_second = 24
         video = VideoWriter('./output.avi', four_cc, float(frames_per_second), (width, height))
         for frame in frames:

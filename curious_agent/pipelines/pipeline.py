@@ -37,7 +37,6 @@ class Pipeline(object):
     def __init__(self, train_agent: Agent,
                  environment: Environment,
                  config: Munch,
-                 env_type: str = '',
                  test_agent: Agent = None, test_env: Environment = None):
         # configuration
         self.name = config['pipeline_name']

@@ -13,7 +13,7 @@ test_env = AtariEnvironment(config['env_config'], atari_wrapper=True)
 agent = DQNAgent(env, config['agent_config'])
 test_agent = DQNAgent(env, config['agent_config'])
 
-pipeline = Pipeline(train_agent=agent, environment=env, config=config, env_type='open-ai-atari', test_agent=test_agent,
+pipeline = Pipeline(train_agent=agent, environment=env, config=config, test_agent=test_agent,
                     test_env=test_env)
 
 pipeline.execute()
