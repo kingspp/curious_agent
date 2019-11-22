@@ -14,7 +14,8 @@ import threading
 import time
 from curious_agent.agents import Agent
 from curious_agent.environments import Environment
-from curious_agent.stats_recorders.stats_recorder import StatsRecorder
+from curious_agent.environments.open_ai.atari.atari_environment import AtariEnvironment
+from curious_agent.stats_recorders.open_ai_stats_recorders.open_ai_stats_recorder import AtariEnvStatsRecorder
 from munch import Munch
 import json
 from curious_agent import MODULE_CONFIG, MODULE_CONFIG_DATA
@@ -36,7 +37,8 @@ class Pipeline(object):
     def __init__(self, train_agent: Agent,
                  environment: Environment,
                  config: Munch,
-                 test_agent: Agent = None, test_environment: Environment = None):
+                 env_type: str = '',
+                 test_agent: Agent = None, test_env: Environment = None):
         # configuration
         self.name = config['pipeline_name']
         self.config = config
@@ -44,19 +46,20 @@ class Pipeline(object):
         self.train_agent = train_agent
         self.env = environment
         # testing elements
-        self.test_environment = test_environment
+        self.test_env = test_env
         self.probing_enabled = False
 
         # if both are provided, the testing functionality is enabled
-        if test_agent is not None and test_environment is not None:
+        if test_agent is not None and test_env is not None:
             self.probing_enabled = True
             # make sure that the train agent and test agent are of the same type
             assert isinstance(test_agent, type(train_agent)), "The train and test agent should be of the same type."
-            self.stats_recorder = StatsRecorder(test_agent, test_environment)
+            if env_type == 'open-ai-atari':
+                self.stats_recorder = AtariEnvStatsRecorder(test_agent, test_env, 30)
             # make sure that we do not let the environment be used by the agent.
-            assert self.train_agent.env != self.test_environment, "The agent and environment in the pipeline's "\
-                                                                  "arguments should not be related. Use a new "\
-                                                                  "instance of the environment."
+            assert self.train_agent.env != self.test_env, "The agent and environment in the pipeline's "\
+                                                          "arguments should not be related. Use a new "\
+                                                          "instance of the environment."
         # logging elements
         self.experiments_meta = {"experiments": {}}
         self.current_experiments_meta = {"runs": 0}

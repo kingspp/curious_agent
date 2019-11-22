@@ -16,7 +16,7 @@ import time
 from torch.autograd import Variable
 import json
 import uuid
-from curious_agent.environments.open_ai.atari_environments.open_ai_environment import AtariEnvironment
+from curious_agent.environments.open_ai.atari.atari_environment import AtariEnvironment
 from curious_agent.buffers import PrioritizedBuffer, ReplayBuffer
 from curious_agent.meta.default_meta import DefaultMetaData
 from munch import Munch
@@ -32,7 +32,6 @@ random.seed(595)
 
 
 class DQNAgent(Agent):
-
 
     def __init__(self, env, agent_config: Munch):
         """
@@ -113,7 +112,7 @@ class DQNAgent(Agent):
         ###########################
         pass
 
-    def make_action(self, observation, test=True):
+    def take_action(self, observation, test=True):
         """
         Return predicted action of your agent
         Input:
@@ -262,7 +261,7 @@ class DQNAgent(Agent):
                                          self.state.config.eps - self.state.eps_delta * self.state.t)
                 if self.state.cur_eps == self.state.config.eps_min:
                     self.state.mode = 'Exploit'
-                action, q = self.make_action(state)
+                action, q = self.take_action(state)
                 next_state, reward, done, _ = self.env.step(action.item())
                 self.state.reward_list[-1] += reward
                 self.state.max_q_list[-1] = max(self.state.max_q_list[-1], q[0].item())
