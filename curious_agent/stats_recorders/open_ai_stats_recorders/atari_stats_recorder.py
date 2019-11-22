@@ -9,28 +9,31 @@ import numpy as np
 import time
 from cv2 import VideoWriter, VideoWriter_fourcc
 
-# from curious_agent.environments.environment import Environment
+from curious_agent.environments.environment import Environment
 # from curious_agent.agents.agent import Agent
 
 from curious_agent.agents.agent import Agent
 from curious_agent.stats_recorders.stats_recorder import StatsRecorder
 from curious_agent.environments.open_ai.atari.atari_environment import AtariEnvironment
-
+from typeguard import typechecked
 
 seed = 11037
+
 
 class AtariEnvStatsRecorder(StatsRecorder):
     """Abstract class that contains the definition of the abstract load and record functions that provide an interface
     to produce statistics from an environment given an agent and an environment.
 
     """
+    @typechecked
     def __init__(self, agent: Agent, env: AtariEnvironment, episodes_number: int):
         """
 
         :param agent: a testing agent (should not be the same agent that is being trained)
         :param env: a testing environment (should not be the same environment that is being used for training)
         """
-        super(agent, env)
+        self.agent = agent
+        self.env = env
         self.episodes_number = episodes_number
 
     def load(self, location):

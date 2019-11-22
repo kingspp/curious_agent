@@ -15,7 +15,7 @@ import time
 from curious_agent.agents import Agent
 from curious_agent.environments import Environment
 from curious_agent.environments.open_ai.atari.atari_environment import AtariEnvironment
-from curious_agent.stats_recorders.open_ai_stats_recorders.open_ai_stats_recorder import AtariEnvStatsRecorder
+from curious_agent.stats_recorders.open_ai_stats_recorders.atari_stats_recorder import AtariEnvStatsRecorder
 from munch import Munch
 import json
 from curious_agent import MODULE_CONFIG, MODULE_CONFIG_DATA
@@ -53,9 +53,11 @@ class Pipeline(object):
         if test_agent is not None and test_env is not None:
             self.probing_enabled = True
             # make sure that the train agent and test agent are of the same type
-            assert isinstance(test_agent, type(train_agent)), "The train and test agent should be of the same type."
-            if env_type == 'open-ai-atari':
+            assert type(test_agent) == type(train_agent), "The train and test agent should be of the same type."
+            if type(test_env) == AtariEnvironment:
                 self.stats_recorder = AtariEnvStatsRecorder(test_agent, test_env, 30)
+            else:
+                raise NotImplementedError('No other StatsRecorder type is implemented.')
             # make sure that we do not let the environment be used by the agent.
             assert self.train_agent.env != self.test_env, "The agent and environment in the pipeline's "\
                                                           "arguments should not be related. Use a new "\
