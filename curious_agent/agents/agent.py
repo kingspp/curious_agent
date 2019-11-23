@@ -49,16 +49,6 @@ class Agent(metaclass=ABCMeta):
         raise NotImplementedError
 
     @abstractmethod
-    def init_game_setting(self):
-        """
-
-        Testing function will call this function at the begining of new game
-        Put anything you want to initialize if necessary
-
-        """
-        raise NotImplementedError
-
-    @abstractmethod
     @typechecked
     def train(self, persist: bool):
         """A method that contains the whole reinforcement learning algorithm
