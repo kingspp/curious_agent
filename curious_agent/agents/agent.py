@@ -29,7 +29,7 @@ class Agent(metaclass=ABCMeta):
     def __init__(self, env: Environment, agent_config: dict):
         self.env = env
         self.state = Munch({"config": agent_config})
-        self._models = None
+        self.state._models = None
         self.meta = DefaultMetaData
 
     @abstractmethod
@@ -82,26 +82,11 @@ class Agent(metaclass=ABCMeta):
         # a halted state, as well as from a startup-state. the same logic should work, in either case.
         raise NotImplementedError
 
-    @typechecked
-    def load(self, path: str):
-        """Method that loads the state variables and the models to enable the experiment to continue from a halted
-        state
-
-        This method affects the self.state.config and self.models variables.
-
-        :note: notice how this is not an abstract function; you don't need to implement it
-
-        :param path: the name of the file on the disk (ideally relative to the working directory)
-
-        :return: void
-        """
-        raise NotImplementedError
-
     def register_models(self):
-        self._models = {}
+        self.state._models = {}
         for k, v in self.__dict__.items():
             if isinstance(v, Model):
-                self._models[k if v.name == "" else v.name] = ref(v)()
+                self.state._models[k if v.name == "" else v.name] = ref(v)()
 
     @typechecked
     def save(self, i_episode):
@@ -116,14 +101,42 @@ class Agent(metaclass=ABCMeta):
         :return: void
         """
         if i_episode % self.state.config.save_freq == 0:
-            if self._models is None:
+            if self.state._models is None:
                 self.register_models()
             save_dir = os.path.join(MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT, str(i_episode))
             Directories.mkdir(save_dir)
-            for k, model in self._models.items():
+            for k, model in self.state._models.items():
                 model.save(
                     file_name_with_path=os.path.join(save_dir,
                                                      f'e_{i_episode}_{k if model.name == "" else model.name}.th'))
 
             with open(os.path.join(save_dir, f"e_{i_episode}.meta"), 'w') as f:
-                json.dump(self.state, f, cls=CustomJsonEncoder)
+                json.dump(self.state, f, cls=CustomJsonEncoder, indent=2)
+            _exp_meta = json.load(open(os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, '..', '..',
+                                                    MODULE_CONFIG.BaseConfig.EXPERIMENTS_META_NAME + '.json')))
+            _exp_name = MODULE_CONFIG.BaseConfig.BASE_DIR.split('/')[-2]
+            _exp_run = MODULE_CONFIG.BaseConfig.BASE_DIR.split('/')[-1]
+            _exp_meta[_exp_name][_exp_run]['available_checkpoints'].append(i_episode)
+            json.dump(_exp_meta, open(os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, '..', '..',
+                                                   MODULE_CONFIG.BaseConfig.EXPERIMENTS_META_NAME + '.json'), 'w'),
+                      indent=2)
+
+    @typechecked
+    def load(self, file_name_with_path: str):
+        """Method that saves the models and state variables to enable the safe halting and resumption of experiments
+
+        This method's side effect is only restricted to the file-system.
+
+        :note: notice how this is not an abstract function; you don't need to implement it
+
+        :param file_name_with_path: the name of the file on the disk (ideally relative to the working directory)
+
+        :return: void
+        """
+        # self.state = Munch(json.load(open(file_name_with_path + ".meta")))
+        if self.state._models is None:
+            self.register_models()
+        logger.info("Agent State loaded successfully")
+        for k, model in self.state._models.items():
+            model.load(file_name_with_path=os.path.join(f'{file_name_with_path}_{model.name}.th'))
+            logger.info(f"{model.name} model loaded successfully")

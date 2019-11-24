@@ -1,5 +1,6 @@
 import json
 import numpy as np
+from torch import nn
 
 
 class CustomJsonEncoder(json.JSONEncoder):
@@ -17,6 +18,8 @@ class CustomJsonEncoder(json.JSONEncoder):
             return obj.tolist()
         elif isinstance(obj, set):
             return list(obj)
+        elif isinstance(obj, nn.Module):
+            return obj.__str__()
         else:
             try:
                 return obj.default()

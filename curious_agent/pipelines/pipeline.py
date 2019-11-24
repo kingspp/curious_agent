@@ -58,13 +58,15 @@ class Pipeline(object):
             else:
                 raise NotImplementedError('No other StatsRecorder type is implemented.')
             # make sure that we do not let the environment be used by the agent.
-            assert self.train_agent.env != self.test_env, "The agent and environment in the pipeline's "\
-                                                          "arguments should not be related. Use a new "\
+            assert self.train_agent.env != self.test_env, "The agent and environment in the pipeline's " \
+                                                          "arguments should not be related. Use a new " \
                                                           "instance of the environment."
         # logging elements
-        self.experiments_meta = {"experiments": {}}
-        self.current_experiments_meta = {"runs": 0}
+        self.experiments_meta = {}
+        self.current_experiments_meta = {"available_checkpoints": []}
+        self.current_run = 1
         self.cur_exp_dir = ""
+        logger.info("Config: " + json.dumps(self.config, indent=2))
 
         if not MODULE_CONFIG.BaseConfig.DRY_RUN:
             self.create_base_directories()
@@ -122,23 +124,27 @@ class Pipeline(object):
         try:
             if File.is_exist(meta_file):
                 self.experiments_meta = json.load(open(meta_file))
-                if self.name in self.experiments_meta['experiments']:
-                    self.current_experiments_meta = self.experiments_meta['experiments'][self.name]
+                if self.name in self.experiments_meta:
+                    self.current_run = int(max(list(self.experiments_meta[self.name].keys()))) + 1
+                    self.experiments_meta[self.name][self.current_run] = self.current_experiments_meta
+                else:
+                    self.experiments_meta[self.name] = {self.current_run: self.current_experiments_meta}
+            else:
+                self.experiments_meta = {self.name: {self.current_run: self.current_experiments_meta}}
         except:
-            pass
+            raise Exception("Existing experiments meta is corrupt.")
 
     @typechecked
     def create_experiments_dir(self, is_continuing: bool):
         # increment the number of runs for this experiment
-        self.current_experiments_meta['runs'] += 1
         # update the in-memory json experiments' meta
-        self.experiments_meta['experiments'][self.name] = self.current_experiments_meta
+        # self.experiments_meta[self.name][self.current_run] = {"available_checkpoints": []}
         # create the folder for the pipeline/experiment, if it's not there yet
         Directories.mkdir(os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, self.name))
         # create the folder corresponding to the current run, and add the logs, checkpoints, graphs and configs
         # directories.
         self.cur_exp_dir = os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, self.name,
-                                        str(self.current_experiments_meta['runs']))
+                                        str(self.current_run))
         json.dump(self.experiments_meta, open(
             MODULE_CONFIG.BaseConfig.BASE_DIR + "/" + MODULE_CONFIG.BaseConfig.EXPERIMENTS_META_NAME + '.json', 'w'),
                   indent=2)
@@ -159,10 +165,6 @@ class Pipeline(object):
         json.dump(MODULE_CONFIG_DATA, open(f"{self.cur_exp_dir}/{path_configs}/base_config.json", 'w'), indent=2)
         json.dump(self.config, open(f"{self.cur_exp_dir}/{path_configs}/pipeline_config.json",
                                     'w'), indent=2)
-        # write the experiments json that keeps track of each experiment's number of runs, and log
-        json.dump(self.experiments_meta, open(
-            MODULE_CONFIG.BaseConfig.BASE_DIR + "/" + MODULE_CONFIG.BaseConfig.EXPERIMENTS_META_NAME + '.json', 'w'),
-                  indent=2)
         if is_continuing:
             json.dump('{"is_continuing": 1}', open(f"{self.cur_exp_dir}/{path_configs}/continued_training_info.json",
                                                    'w'), indent=2)
@@ -214,9 +216,10 @@ class Pipeline(object):
                 # create file structure for TensorBoardX logging
                 os.system(
                     f"tensorboard --logdir {MODULE_CONFIG.BaseConfig.PATH_GRAPHS} --port {MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT} > {MODULE_CONFIG.BaseConfig.PATH_LOG}/tb.log 2>&1 &")
-                logger.info(f"Starting tensorboard @ http://localhost:{MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT}/#scalars")
+                logger.info(
+                    f"Starting tensorboard @ http://localhost:{MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT}/#scalars")
             # start the training process (blocking)
-            self.train_agent.train(False)
+            self.train_agent.train()
             if self.probing_enabled:
                 # stop the performance probing thread
                 self.performanceProbingThread.stop()
@@ -224,7 +227,7 @@ class Pipeline(object):
             self.cleanup()
 
     @typechecked
-    def resume(self, run: int=-1, checkpoint: int=-1):
+    def resume(self, run: int = -1, checkpoint: int = -1):
         """Methods that continues the training from previous checkpoints. Everything stored in the recommended ways for
         hot reloads in this framework is restored for training resumption
 
@@ -240,7 +243,6 @@ class Pipeline(object):
         if not MODULE_CONFIG.BaseConfig.DRY_RUN:
             self.create_experiments_dir(is_continuing=True)
 
-
         # for fs_object in os.listdir(os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, self.name)):
         #     if os.path.isdir(fs_object):
         #         pass
@@ -253,7 +255,8 @@ class Pipeline(object):
                 # create file structure for TensorBoardX logging
                 os.system(
                     f"tensorboard --logdir {MODULE_CONFIG.BaseConfig.PATH_GRAPHS} --port {MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT} > {MODULE_CONFIG.BaseConfig.PATH_LOG}/tb.log 2>&1 &")
-                logger.info(f"Starting tensorboard @ http://localhost:{MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT}/#scalars")
+                logger.info(
+                    f"Starting tensorboard @ http://localhost:{MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT}/#scalars")
             # start the training process (blocking)
             self.train_agent.train(True)
             if self.probing_enabled:
@@ -261,6 +264,28 @@ class Pipeline(object):
                 self.performanceProbingThread.stop()
         except KeyboardInterrupt:
             self.cleanup()
+
+    def _load_pipeline(self, run: int = -1, checkpoint: int = -1):
+        # Check if run exists
+        if run == -1:
+            run = str(max([int(i) for i in list(self.experiments_meta[self.name].keys())])-1)
+        else:
+            if str(run) not in self.experiments_meta[self.name]:
+                raise Exception(f"Experiment run not found! Given: {run}")
+
+        # Check if checkpoint exist
+        if checkpoint == -1:
+            if len(self.experiments_meta[self.name][run]['available_checkpoints']) > 0:
+                checkpoint = str(max(self.experiments_meta[self.name][run]['available_checkpoints']))
+            else:
+                raise Exception(f"Checkpoints not available for the specified run. Given: Run: {run}")
+        else:
+            if checkpoint not in self.experiments_meta[self.name][run]['available_checkpoints']:
+                raise Exception(f"Checkpoint for the given experiment not found: Give: {checkpoint}")
+
+        #Get the path
+        checkpoint_path =os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, self.name, run, MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT, checkpoint, f"e_{checkpoint}")
+        self.train_agent.load(file_name_with_path=checkpoint_path)
 
     @typechecked
     def cleanup(self):

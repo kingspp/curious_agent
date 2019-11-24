@@ -21,7 +21,7 @@ class Model(nn.Module, metaclass=ABCMeta):
         member variables.
         """
         super(Model, self).__init__()
-        self.name =  name
+        self.name = name
 
     @abstractmethod
     def forward(self, inp):
@@ -41,13 +41,13 @@ class Model(nn.Module, metaclass=ABCMeta):
             torch.save(self, f)
         logger.info(f"{self.name} saved successfully at {file_name_with_path}")
 
-    def load(self):
+    def load(self, file_name_with_path, device=""):
         """
         Load Model
         :return:
         """
         logger.info(f"Restoring {self.name} model from {self.args.load_dir} . . . ")
-        model = torch.load(self.args.load_dir,
-                           map_location=torch.device(self.args.device)).to(self.args.device)
+        model = torch.load(file_name_with_path,
+                           map_location=torch.device(device)).to(device) if device != "" else None
         logger.info(f"{self.name} Model successfully restored.")
         return model
