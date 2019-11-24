@@ -223,13 +223,13 @@ class DQNAgent(Agent):
             logger.info("Executing garbage collector . . .")
             gc.collect()
 
-    def train(self, persist):
+    def train(self):
         """
         Implement your training algorithm here
         """
         ###########################
         # YOUR IMPLEMENTATION HERE #
-        self.meta = DefaultMetaData(fp=open(os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, 'result.csv'), 'w'),
+        self.meta = DefaultMetaData(fp=open(os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, 'agent_stats.csv'), 'w'),
                                     args=self.state.config)
         self.state.t = 1
         self.state.mode = "Random"

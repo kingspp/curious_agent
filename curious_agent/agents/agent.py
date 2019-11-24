@@ -18,6 +18,7 @@ from curious_agent import MODULE_CONFIG
 import json
 from curious_agent.util import CustomJsonEncoder
 from curious_agent.meta.default_meta import DefaultMetaData
+from curious_agent.util import Directories
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +61,7 @@ class Agent(metaclass=ABCMeta):
 
     @abstractmethod
     @typechecked
-    def train(self, persist: bool):
+    def train(self, persist: bool, run: int = -1, checkpoint: int = -1):
         """A method that contains the whole reinforcement learning algorithm
 
         The implementations of this method should respect the following idiomatic restrictions to ensure reliable
@@ -127,10 +128,12 @@ class Agent(metaclass=ABCMeta):
         if i_episode % self.state.config.save_freq == 0:
             if self._models is None:
                 self.register_models()
+            save_dir = os.path.join(MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT, str(i_episode))
+            Directories.mkdir(save_dir)
             for k, model in self._models.items():
                 model.save(
-                    file_name_with_path=os.path.join(MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT,
+                    file_name_with_path=os.path.join(save_dir,
                                                      f'e_{i_episode}_{k if model.name == "" else model.name}.th'))
 
-            with open(os.path.join(MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT, f"e_{i_episode}.meta"), 'w') as f:
+            with open(os.path.join(save_dir, f"e_{i_episode}.meta"), 'w') as f:
                 json.dump(self.state, f, cls=CustomJsonEncoder)

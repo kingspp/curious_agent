@@ -22,7 +22,7 @@
     "learn_freq": 4,
     "gc_freq": 1000,
     "load_dir": "",
-    "save_freq": 10,
+    "save_freq": 100,
     "disp_freq": 100,
     "optimizer_eps": 0.001,
     "device": "cpu",

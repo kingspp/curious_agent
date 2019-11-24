@@ -220,7 +220,7 @@ class Pipeline(object):
             self.cleanup()
 
     @typechecked
-    def resume(self, run: int, checkpoint: int):
+    def resume(self, run: int=-1, checkpoint: int=-1):
         """Methods that continues the training from previous checkpoints. Everything stored in the recommended ways for
         hot reloads in this framework is restored for training resumption
 
@@ -235,9 +235,11 @@ class Pipeline(object):
         # TODO 2: resolve the name of the checkpoint folder and get the agent's (directory operations)
         if not MODULE_CONFIG.BaseConfig.DRY_RUN:
             self.create_experiments_dir(is_continuing=True)
-        for fs_object in os.listdir(os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, self.name)):
-            if os.path.isdir(fs_object):
-                pass
+
+
+        # for fs_object in os.listdir(os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, self.name)):
+        #     if os.path.isdir(fs_object):
+        #         pass
         # TODO 3: if destructive, remove the checkpoints that come after the one that was loaded
         # launch the performance probing thread
         try:
