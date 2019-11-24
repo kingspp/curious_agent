@@ -17,7 +17,8 @@ numpy
 
 # Module Dependencies
 opencv-python-headless
-gym==0.10.4
+# gym==0.10.4
+gym
 gym[atari]
 humanize
 tensorboardX

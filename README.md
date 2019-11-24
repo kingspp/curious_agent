@@ -25,8 +25,50 @@ logger = logging.getLogger(__name__)
 logger.info("Hello World")
 ```
 
-2. 
+2. Implement the "train" function with the "Continuing" Idiomatic Restriction:
+```python
 
 
-  
+continuing = True
+state = {}
 
+
+if continuing:  # the training is being resumed from a halted state
+    pass  # i_episode is reloaded as part of the state
+else:  # the training is being started from scratch
+    self.state.i_episode = 0  # initialize the current number of episodes
+
+
+# **OK!**: the current episode index can be reset and the algorithm would work seamlessly
+while self.state.i_episode < 100000:
+    # .
+    # .
+    # .
+    # more training logic
+    # .
+    # .
+    # .
+    self.state.i_episode += 1
+
+# **NOT OK!**: the current episode index starts from 0 regardless
+for self.state.i_episode in range(0, 100000):
+    # .
+    # .
+    # .
+    # more training logic
+    # .
+    # .
+    # .
+    pass
+
+```
+3. Use the **state** object when implementing the "train" function to store and retrieve state information
+```python
+# **OK!**: use the **state** munch object to store and retrieve all state information that the algorithm needs
+self.state.i_episode = self.state.i_episode + 1
+self.state.eps -= self.state.eps_reduction_rate
+
+# **NOT OK!**: define state variables outside of the **state** munch object.
+self.i_episode = self.i_episode + 1
+self.eps -= self.eps_reduction_rate
+```

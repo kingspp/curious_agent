@@ -1,17 +1,18 @@
 import gym
 import numpy as np
-from curious_agent.environments.open_ai.atari_environments.atari_wrapper import make_wrap_atari
+from curious_agent.environments.open_ai.atari.atari_wrapper import make_wrap_atari
 from curious_agent.environments.environment import Environment
+from munch import Munch
 
 
 class AtariEnvironment(Environment):
-    def __init__(self, args, atari_wrapper=False, test=False):
+    def __init__(self, config: Munch, atari_wrapper=False, test=False):
         if atari_wrapper:
             clip_rewards = not test
-            self.env = make_wrap_atari(args['env_name'], clip_rewards)
+            self.env = make_wrap_atari(config['env_name'], clip_rewards)
         else:
-            self.env = gym.make(args['env_name'])
-        self.args=args
+            self.env = gym.make(config['env_name'])
+        # self.args=args
         self.action_space = self.env.action_space
         self.observation_space = self.env.observation_space
         super().__init__()

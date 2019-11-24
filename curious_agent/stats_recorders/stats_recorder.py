@@ -23,9 +23,6 @@ class StatsRecorder(object):
         :param agent: a testing agent (should not be the same agent that is being trained)
         :param env: a testing environment (should not be the same environment that is being used for training)
         """
-        self.agent = agent
-        self.env = env
-
     def load(self, location):
         raise NotImplementedError
 

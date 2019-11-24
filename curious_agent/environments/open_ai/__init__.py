@@ -1,2 +1,2 @@
-import curious_agent.environments.open_ai.atari_environments
+import curious_agent.environments.open_ai.atari
 

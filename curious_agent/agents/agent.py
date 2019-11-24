@@ -33,7 +33,7 @@ class Agent(metaclass=ABCMeta):
         self.meta = DefaultMetaData
 
     @abstractmethod
-    def make_action(self, observation: np.array, test: bool = True):
+    def take_action(self, observation: np.array, test: bool = True):
         """Method that returns predicted action of the agent
 
         There is an idiomatic restriction that should go into the implementation of this function: the pre-processing
@@ -46,16 +46,6 @@ class Agent(metaclass=ABCMeta):
         :param test: boolean to indicate if the action is for training or testing
 
         :return action: int that encodes the predicted action from the trained model
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def init_game_setting(self):
-        """
-
-        Testing function will call this function at the begining of new game
-        Put anything you want to initialize if necessary
-
         """
         raise NotImplementedError
 

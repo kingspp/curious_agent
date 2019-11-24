@@ -1,0 +1,2 @@
+import curious_agent.environments.open_ai.atari.atari_environment
+import curious_agent.environments.open_ai.atari.atari_wrapper
