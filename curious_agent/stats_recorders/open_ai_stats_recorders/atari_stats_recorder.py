@@ -9,6 +9,9 @@ import numpy as np
 import time
 from cv2 import VideoWriter, VideoWriter_fourcc
 from gym.wrappers import Monitor
+import logging
+
+
 
 from curious_agent.environments.environment import Environment
 # from curious_agent.agents.agent import Agent
@@ -17,6 +20,8 @@ from curious_agent.agents.agent import Agent
 from curious_agent.stats_recorders.stats_recorder import StatsRecorder
 from curious_agent.environments.open_ai.atari.atari_environment import AtariEnvironment
 from typeguard import typechecked
+
+logger = logging.getLogger(__name__)
 
 seed = 11037
 
@@ -35,14 +40,16 @@ class AtariEnvStatsRecorder(StatsRecorder):
         """
         self.agent = agent
         self.env = env
-        self.env.env = Monitor(self.env.env, './output', force=True)
         # self.env.env = Monitor(self.env.env, './output', force=True)
         self.episodes_number = episodes_number
 
     def load(self, location):
-        raise NotImplementedError
+        self.agent.load(location)
+
 
     def record(self, output):
+        logger.info("Started recording. . .")
+        # self.env.env = Monitor(self.env.env, output + "/video", force=True, write_upon_reset=True)
         rewards = []
         self.env.seed(seed)
         start_time = time.time()
@@ -74,7 +81,7 @@ class AtariEnvStatsRecorder(StatsRecorder):
         # turn the frames list into a video
         four_cc = VideoWriter_fourcc(*'h264')
         frames_per_second = 24
-        video = VideoWriter('./output.avi', four_cc, float(frames_per_second), (width, height))
+        video = VideoWriter(output + '/output.mp4', four_cc, float(frames_per_second), (width, height))
         for frame in frames:
             video.write(frame)
         video.release()
@@ -83,3 +90,4 @@ class AtariEnvStatsRecorder(StatsRecorder):
         print('Mean:', np.mean(rewards))
         print('rewards', rewards)
         print('running time', time.time() - start_time)
+        logger.info("Stopped the testing/recording. . .")

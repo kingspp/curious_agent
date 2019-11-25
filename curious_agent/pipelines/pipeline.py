@@ -103,9 +103,15 @@ class Pipeline(object):
 
                 :return: void
                 """
-                while not self.stopped:
+                logger.info("Starting performance probing thread...")
+                while not self._stop_event.is_set():
+
                     time.sleep(self.interval)
+                    logger.info("Running a test . . .")
+
+
                     self.pipeline.performance_stats()
+                    logger.info("Completed a test . . .")
 
         self.performanceProbingThread = PerformanceProbingThread(self, 10)
 
@@ -181,9 +187,17 @@ class Pipeline(object):
         """
         # TODO: resolve the location of the stats using the info: user, experiment# and checkpoint# available on the
         #  file system (directory operations)
-        location = "stats"
-        self.stats_recorder.load(location + "name of checkpoint folder or weights")
-        self.stats_recorder.record(location + "output")
+        # TODO: figure out whether a video is needed for the lastest checkpoint(s)
+        #
+        checkpoints = []
+        for fs_object in os.listdir(MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT):
+            # if os.path.isfile(fs_object):
+            checkpoints.append(int(fs_object))
+        if len(checkpoints) > 0:
+            checkpoints.sort()
+            location = MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT + "/" + str(checkpoints[0])
+            self.stats_recorder.load(location)
+            self.stats_recorder.record(location)
 
     @typechecked
     def execute(self):
