@@ -275,7 +275,7 @@ class Pipeline(object):
 
         # Check if checkpoint exist
         if checkpoint == -1:
-            if len(self.experiments_meta[self.name][run]['available_checkpoints']) > 0:
+            if run in self.experiments_meta[self.name] and len(self.experiments_meta[self.name][run]['available_checkpoints']) > 0:
                 checkpoint = str(max(self.experiments_meta[self.name][run]['available_checkpoints']))
             else:
                 raise Exception(f"Checkpoints not available for the specified run. Given: Run: {run}")
@@ -283,7 +283,7 @@ class Pipeline(object):
             if checkpoint not in self.experiments_meta[self.name][run]['available_checkpoints']:
                 raise Exception(f"Checkpoint for the given experiment not found: Give: {checkpoint}")
 
-        #Get the path
+        # Get the path
         checkpoint_path =os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, self.name, run, MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT, checkpoint, f"e_{checkpoint}")
         self.train_agent.load(file_name_with_path=checkpoint_path)
 
