@@ -28,6 +28,6 @@ pipeline = Pipeline(train_agent=agent, environment=env, config=config,
                     )
 
 # Run the training loop
-# pipeline.execute()
-pipeline._load_pipeline()
+pipeline.execute()
+# pipeline._load_pipeline()
 # pipeline.resume()
