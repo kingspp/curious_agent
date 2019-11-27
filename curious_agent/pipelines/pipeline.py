@@ -100,7 +100,7 @@ class Pipeline(object):
                     time.sleep(self.interval)
                     self.pipeline.check_performance()
 
-        self.performanceProbingThread = PerformanceProbingThread(self, 10)
+        self.performanceProbingThread = PerformanceProbingThread(self, 20)
 
     @typechecked
     def create_base_directories(self):
