@@ -23,8 +23,8 @@ class StatsRecorder(object):
         :param agent: a testing agent (should not be the same agent that is being trained)
         :param env: a testing environment (should not be the same environment that is being used for training)
         """
-    def load(self, location):
+    def load(self, location: str):
         raise NotImplementedError
 
-    def record(self, output):
+    def record(self, output: str):
         raise NotImplementedError

@@ -16,16 +16,11 @@ config = pipeline_config_loader(sys.argv[1])
 
 # Create Environment
 env = AtariEnvironment(config['env_config'], atari_wrapper=True)
-test_env = AtariEnvironment(config['env_config'], atari_wrapper=True)
 # Create Agent
 agent = DQNAgent(env, config['agent_config'])
-test_agent = DQNAgent(env, config['agent_config'])
 
-# Load the environment and agent in the pipeline
-pipeline = Pipeline(train_agent=agent, environment=env, config=config,
-                    test_agent=test_agent,
-                    test_env=test_env
-                    )
+# Load the environment and agent into the pipeline
+pipeline = Pipeline(train_agent=agent, environment=env, config=config, test=True)
 
 # Run the training loop
 pipeline.execute()

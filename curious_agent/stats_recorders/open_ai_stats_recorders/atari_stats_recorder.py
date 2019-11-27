@@ -43,13 +43,14 @@ class AtariEnvStatsRecorder(StatsRecorder):
         # self.env.env = Monitor(self.env.env, './output', force=True)
         self.episodes_number = episodes_number
 
-    def load(self, location):
+    @typechecked
+    def load(self, location: str):
         self.agent.load(location)
 
-
-    def record(self, output):
+    @typechecked
+    def record(self, output: str):
         logger.info("Started recording. . .")
-        # self.env.env = Monitor(self.env.env, output + "/video", force=True, write_upon_reset=True)
+        self.env.env = Monitor(self.env.env, output, force=True)
         rewards = []
         self.env.seed(seed)
         start_time = time.time()
@@ -59,35 +60,31 @@ class AtariEnvStatsRecorder(StatsRecorder):
             # grab the dimensions off the first frame
             height, width, channels = self.env.env.render(mode='rgb_array').shape
 
-            self.agent.init_game_setting()
             done = False
             episode_reward = 0.0
 
             # playing one game
-            frames = [state]
             while not done:
                 # get the image instead of displaying it
-                img = self.env.env.render(mode='rgb_array')
+                # self.env.env.render(mode='rgb_array')
                 action = self.agent.take_action(state, test=True)
                 state, reward, done, info = self.env.step(action)
                 episode_reward += reward
-                # store the frame
-                frames.append(img)
 
             rewards.append(episode_reward)
 
         self.env.env.close()
 
         # turn the frames list into a video
-        four_cc = VideoWriter_fourcc(*'h264')
-        frames_per_second = 24
-        video = VideoWriter(output + '/output.mp4', four_cc, float(frames_per_second), (width, height))
-        for frame in frames:
-            video.write(frame)
-        video.release()
+        # four_cc = VideoWriter_fourcc(*'MP42')
+        # frames_per_second = 24
+        # video = VideoWriter(output + '/output.avi', four_cc, float(frames_per_second), (width, height))
+        # for frame in frames:
+        #     video.write(frame)
+        # logger.info("Releasing the video. . .")
+        # video.release()
 
-        print('Run %d episodes' % self.episodes_number)
-        print('Mean:', np.mean(rewards))
-        print('rewards', rewards)
-        print('running time', time.time() - start_time)
+        logger.info('Run ' + str(self.episodes_number) + ' episodes')
+        logger.info('Mean: ' + str(np.mean(rewards)))
+        logger.info('running time: ' + str(time.time() - start_time))
         logger.info("Stopped the testing/recording. . .")

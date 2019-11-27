@@ -23,6 +23,7 @@ from curious_agent.util import Directories, File
 import os
 from curious_agent.util import add_logs_to_tmp
 import logging
+import gc
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +38,7 @@ class Pipeline(object):
     def __init__(self, train_agent: Agent,
                  environment: Environment,
                  config: Munch,
-                 test_agent: Agent = None, test_env: Environment = None):
+                 test: bool):
         # configuration
         self.name = config['pipeline_name']
         self.config = config
@@ -45,22 +46,12 @@ class Pipeline(object):
         self.train_agent = train_agent
         self.env = environment
         # testing elements
-        self.test_env = test_env
         self.probing_enabled = False
 
         # if both are provided, the testing functionality is enabled
-        if test_agent is not None and test_env is not None:
+        if test:
             self.probing_enabled = True
-            # make sure that the train agent and test agent are of the same type
-            assert type(test_agent) == type(train_agent), "The train and test agent should be of the same type."
-            if type(test_env) == AtariEnvironment:
-                self.stats_recorder = AtariEnvStatsRecorder(test_agent, test_env, 30)
-            else:
-                raise NotImplementedError('No other StatsRecorder type is implemented.')
-            # make sure that we do not let the environment be used by the agent.
-            assert self.train_agent.env != self.test_env, "The agent and environment in the pipeline's " \
-                                                          "arguments should not be related. Use a new " \
-                                                          "instance of the environment."
+
         # logging elements
         self.experiments_meta = {}
         self.current_experiments_meta = {"available_checkpoints": []}
@@ -107,11 +98,7 @@ class Pipeline(object):
                 while not self._stop_event.is_set():
 
                     time.sleep(self.interval)
-                    logger.info("Running a test . . .")
-
-
-                    self.pipeline.performance_stats()
-                    logger.info("Completed a test . . .")
+                    self.pipeline.check_performance()
 
         self.performanceProbingThread = PerformanceProbingThread(self, 10)
 
@@ -177,27 +164,36 @@ class Pipeline(object):
         add_logs_to_tmp(path=os.path.join(self.cur_exp_dir, MODULE_CONFIG.BaseConfig.PATH_LOG))
 
     @typechecked
-    def performance_stats(self):
-        """A method that tests the latest model output during an experiment and saves statistics and video footage of
-        the test run
-
-        This test assumes that the agent and the test_environment are compatible, if they are not, an error may result
+    def check_performance(self):
+        """A method that crawls over the checkpoints and creates videos if needed
 
         :return: void
         """
-        # TODO: resolve the location of the stats using the info: user, experiment# and checkpoint# available on the
-        #  file system (directory operations)
-        # TODO: figure out whether a video is needed for the lastest checkpoint(s)
-        #
+        if type(self.env) == AtariEnvironment:
+            pass
+        else:
+            raise NotImplementedError('No other StatsRecorder type is implemented.')
         checkpoints = []
         for fs_object in os.listdir(MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT):
             # if os.path.isfile(fs_object):
             checkpoints.append(int(fs_object))
         if len(checkpoints) > 0:
             checkpoints.sort()
-            location = os.path.join(MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT, str(checkpoints[-1]), f"e_{checkpoints[-1]}")
-            self.stats_recorder.load(location)
-            self.stats_recorder.record(location)
+            logger.info('Crawling over checkpoints. . .')
+            for checkpoint in checkpoints:
+                location = os.path.join(MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT, str(checkpoint), f"e_{checkpoint}")
+                if not os.path.exists(location):
+                    # build a new test agent and environment
+                    logger.info('Running a test for checkpoint: ' + str(checkpoint))
+                    test_env = type(self.env)(self.config['env_config'], atari_wrapper=True)
+                    test_agent = type(self.train_agent)(test_env, self.config['agent_config'])
+                    stats_recorder = AtariEnvStatsRecorder(test_agent, test_env, 30)
+
+                    stats_recorder.load(location)
+                    stats_recorder.record(location)
+                    logger.info('Finished the test for the checkpoint: ' + str(checkpoint))
+                    gc.collect()
+        logger.info('Finished crawling. . .')
 
     @typechecked
     def execute(self):

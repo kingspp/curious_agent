@@ -33,7 +33,7 @@ class AtariEnvironment(Environment):
             observation: np.array
                 current RGB screen of game, shape: (210, 160, 3)
         '''
-        observation = self.env._reset()
+        observation = self.env.reset()
 
         return np.array(observation)
 
