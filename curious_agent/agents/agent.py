@@ -133,10 +133,11 @@ class Agent(metaclass=ABCMeta):
 
         :return: void
         """
-        # self.state = Munch(json.load(open(file_name_with_path + ".meta")))
+
         if self.state._models is None:
             self.register_models()
         logger.info("Agent State loaded successfully")
         for k, model in self.state._models.items():
             model.load(file_name_with_path=os.path.join(f'{file_name_with_path}_{model.name}.th'))
             logger.info(f"{model.name} model loaded successfully")
+        self.state = Munch(json.load(open(file_name_with_path + ".meta")))

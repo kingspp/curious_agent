@@ -195,7 +195,7 @@ class Pipeline(object):
             checkpoints.append(int(fs_object))
         if len(checkpoints) > 0:
             checkpoints.sort()
-            location = MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT + "/" + str(checkpoints[0])
+            location = os.path.join(MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT, str(checkpoints[-1]), f"e_{checkpoints[-1]}")
             self.stats_recorder.load(location)
             self.stats_recorder.record(location)
 

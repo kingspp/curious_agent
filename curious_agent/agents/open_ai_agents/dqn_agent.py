@@ -51,17 +51,18 @@ class DQNAgent(Agent):
 
         self.state = Munch({**self.state,
                             "num_actions": env.action_space.n,
-                            "action_list": np.arange(env.action_space.n),
-                            "reward_list": deque(maxlen=agent_config.window),
-                            "max_q_list": deque(maxlen=agent_config.window),
-                            "loss_list": deque(maxlen=agent_config.window),
-                            "probability_list": np.zeros(env.action_space.n, np.float32),
                             "cur_eps": None,
                             "t": 0,
                             "ep_len": 0,
                             "mode": None,
                             "position": 0,
                             })
+        self.reward_list = deque(maxlen=agent_config.window)
+        self.max_q_list = deque(maxlen=agent_config.window)
+        self.loss_list = deque(maxlen=agent_config.window)
+        self.probability_list = np.zeros(env.action_space.n, np.float32)
+        self.action_list = np.arange(env.action_space.n)
+        
         self.state.eps_delta = (self.state.config.eps - self.state.config.eps_min) / self.state.config.eps_decay_window
 
         if self.state.config.use_pri_buffer:
@@ -112,7 +113,7 @@ class DQNAgent(Agent):
         ###########################
         pass
 
-    def take_action(self, observation, test=True):
+    def take_action(self, observation, test=False):
         """
         Return predicted action of your agent
         Input:
@@ -126,15 +127,15 @@ class DQNAgent(Agent):
         # YOUR IMPLEMENTATION HERE #
         with torch.no_grad():
             # Fill up probability list equal for all actions
-            self.state.probability_list.fill(self.state.cur_eps / self.state.num_actions)
+            self.probability_list.fill(self.state.cur_eps / self.state.num_actions)
             # Fetch q from the model prediction
             q, argq = self.policy_net(Variable(self.channel_first(observation))).data.cpu().max(1)
             # Increase the probability for the selected best action
-            self.state.probability_list[argq[0].item()] += 1 - self.state.cur_eps
+            self.probability_list[argq[0].item()] += 1 - self.state.cur_eps
             # Use random choice to decide between a random action / best action
-            action = torch.tensor([np.random.choice(self.state.action_list, p=self.state.probability_list)])
-            # if self.args.test_dqn:
-            #     action.item()
+            action = torch.tensor([np.random.choice(self.action_list, p=self.probability_list)])
+            if test:
+                return action.item()
         ###########################
         return action, q
 
@@ -239,9 +240,9 @@ class DQNAgent(Agent):
             # Initialize the environment and state
             start_time = time.time()
             state = self.channel_first(self.env.reset())
-            self.state.reward_list.append(0)
-            self.state.loss_list.append(0)
-            self.state.max_q_list.append(0)
+            self.reward_list.append(0)
+            self.loss_list.append(0)
+            self.reward_list.append(0)
             self.state.ep_len = 0
             done = False
 
@@ -263,16 +264,16 @@ class DQNAgent(Agent):
                     self.state.mode = 'Exploit'
                 action, q = self.take_action(state)
                 next_state, reward, done, _ = self.env.step(action.item())
-                self.state.reward_list[-1] += reward
-                self.state.max_q_list[-1] = max(self.state.max_q_list[-1], q[0].item())
+                self.reward_list[-1] += reward
+                self.reward_list[-1] = max(self.reward_list[-1], q[0].item())
                 next_state = self.channel_first(next_state)
                 reward = torch.tensor([reward], device=self.state.config.device)
                 # Store the transition in memory
                 self.replay_buffer.push(state, torch.tensor([int(action)]), next_state, reward,
                                         torch.tensor([done], dtype=torch.float32))
-                self.meta.update_step(self.state.t, self.state.cur_eps, self.state.reward_list[-1],
-                                      self.state.max_q_list[-1],
-                                      self.state.loss_list[-1], self.state.config.lr)
+                self.meta.update_step(self.state.t, self.state.cur_eps, self.reward_list[-1],
+                                      self.reward_list[-1],
+                                      self.loss_list[-1], self.state.config.lr)
 
                 # Increment step and Episode Length
                 self.state.t += 1
@@ -284,13 +285,13 @@ class DQNAgent(Agent):
                 # Perform one step of the optimization (on the target network)
                 if self.state.ep_len % self.state.config.learn_freq == 0:
                     loss = self.optimize_model()
-                    self.state.loss_list[-1] += loss
-            self.state.loss_list[-1] /= self.state.ep_len
+                    self.loss_list[-1] += loss
+            self.loss_list[-1] /= self.state.ep_len
 
             # Update meta
             self.meta.update_episode(i_episode, self.state.t, time.time() - start_time, time.time() - train_start,
                                      self.state.ep_len, len(self.replay_buffer.memory), self.state.cur_eps,
-                                     self.state.reward_list[-1], np.mean(self.state.reward_list),
-                                     self.state.max_q_list[-1], np.mean(self.state.max_q_list),
-                                     self.state.loss_list[-1], np.mean(self.state.loss_list),
+                                     self.reward_list[-1], np.mean(self.reward_list),
+                                     self.reward_list[-1], np.mean(self.reward_list),
+                                     self.loss_list[-1], np.mean(self.loss_list),
                                      self.state.mode, self.state.config.lr)
