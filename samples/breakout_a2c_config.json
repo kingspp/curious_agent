@@ -11,6 +11,9 @@
     "gamma":0.99,
     "n_actions":4,
     "gc_freq": 100,
-    "save_freq": 50
+    "save_freq": 50,
+    "device": "cpu",
+    "load_dir": "",
+    "disp_freq": 100
   }
 }

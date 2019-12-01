@@ -100,7 +100,7 @@ class Pipeline(object):
                     time.sleep(self.interval)
                     self.pipeline.check_performance()
 
-        self.performanceProbingThread = PerformanceProbingThread(self, 20)
+        self.performanceProbingThread = PerformanceProbingThread(self, 120)
 
     @typechecked
     def create_base_directories(self):
@@ -229,7 +229,7 @@ class Pipeline(object):
                 logger.info(
                     f"Starting tensorboard @ http://localhost:{MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT}/#scalars")
             # start the training process (blocking)
-            self.train_agent.train()
+            self.train_agent.train(False)
             if self.probing_enabled:
                 # stop the performance probing thread
                 self.performanceProbingThread.stop()

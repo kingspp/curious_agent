@@ -31,8 +31,8 @@ class A2CMetaData(object):
         self.episode_data = self.episode_template(*args)
         if self.episode_data.episode % self.args.disp_freq == 0:
             logger.info(
-                f"E: {self.episode_data.episode} |  R: {self.episode_data.score} "
-                f"T: {self.episode_data.time:.2f} |  L: {self.episode_data.loss:.2f} "
+                f"E: {self.episode_data.episode} |  R: {self.episode_data.score}"
+                f"T: {self.episode_data.time:.2f} |  L: {self.episode_data.loss:.6f}"
                 )
         if MODULE_CONFIG.BaseConfig.TENSORBOARD_SUMMARIES:
             self.writer.add_scalar('episode/reward', self.episode_data.score, self.episode_data.episode)

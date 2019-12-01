@@ -30,7 +30,7 @@ class Agent(metaclass=ABCMeta):
         self.env = env
         self.state = Munch({"config": agent_config})
         self.state._models = None
-        self.meta = DefaultMetaData
+        # self.meta = DefaultMetaData
 
     @abstractmethod
     def take_action(self, observation: np.array, test: bool = True):

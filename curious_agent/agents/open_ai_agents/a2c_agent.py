@@ -22,9 +22,10 @@ from curious_agent.meta.a2c_meta import A2CMetaData
 from curious_agent.util import Directories
 
 from curious_agent.agents import Agent
-from curious_agent.models import A2CModel
+from curious_agent.models.a2c_model import A2CModel
 import torch as T
 import torch.nn.functional as F
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -36,13 +37,16 @@ class A2CAgent(Agent):
         super(A2CAgent, self).__init__(env=env, agent_config=agent_config)
         self.meta = None
 
-        self.gamma = gamma
-        self.actor_critic = A2CModel(agent_config.lr, agent_config.input_dims, n_actions=agent_config.n_actions)
-        
-        self.register_models()
-        
-        # This is a permutation of the channel required by PyTorch implementation
-        self.actor_critic.preprocess = lambda observation: T.Tensor(observation).to(self.device).permute(2,0,1).unsqueeze(0)
+        # self.agent_config = agent_config
+        self.actor_critic = A2CModel(env=env, config=agent_config, name='actor_critic')
+
+        self.register_models()  # adds the models to ...
+
+        # def preprocess(observation):
+        #     return T.Tensor(observation).to(self.state.config.device).permute(2, 0, 1).unsqueeze(0)
+        #
+        # # This is a permutation of the channel required by PyTorch implementation
+        # self.actor_critic.preprocess = preprocess
 
         self.log_probs = None
 
@@ -57,16 +61,13 @@ class A2CAgent(Agent):
         return action.item()
     
     def learn(self, state, reward, new_state, done):
-
-        self.meta = A2CMeta(fp=open(os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, 'agent_stats.csv'), 'w'),
-                                    args=self.state.config)
         self.actor_critic.optimizer.zero_grad()
 
         _, new_critic_value = self.actor_critic.forward(new_state)
         _, critic_value = self.actor_critic.forward(state)
-        reward = T.tensor(reward, dtype=T.float).to(self.actor_critic.device)
+        reward = T.tensor(reward, dtype=T.float).to(self.state.config.device)
 
-        advantage = reward + self.gamma*new_critic_value*(1-int(done)) - critic_value
+        advantage = reward + self.state.config.gamma*new_critic_value*(1-int(done)) - critic_value
 
         actor_loss = -self.log_probs * advantage
         critic_loss = advantage**2
@@ -84,12 +85,15 @@ class A2CAgent(Agent):
         if not persist:  # Starting
             self.state.i_episode = 0
             self.state.num_episodes = 70000
+            self.meta = A2CMetaData(fp=open(os.path.join(MODULE_CONFIG.BaseConfig.BASE_DIR, 'agent_stats.csv'), 'w'),
+                                    args=self.state.config)
             pass  # custom startup initialization
         else:  # Continuing
             self.load_model()
             pass  # custom continuing initialization
-        
+
         while self.state.i_episode < self.state.num_episodes:
+            start_time = time.time()
             self.state.done = False
             self.state.score = 0
             self.state.observation = self.env.reset()
@@ -106,7 +110,7 @@ class A2CAgent(Agent):
             self.state.i_episode += 1
             
             # Update meta
-            self.meta.update_episode(self.state.i_episode, time.time() - start_time, self.state.score, self.state.loss)
+            self.meta.update_episode(self.state.i_episode, time.time() - start_time, self.state.score, self.state.loss.item())
     
     def load_model(self):
         """
@@ -117,9 +121,8 @@ class A2CAgent(Agent):
             return
         
         logger.info(f"Restoring model from {self.state.config.load_dir} . . . ")
-        self.policy_net = torch.load(self.state.config.load_dir,
+        self.actor_critic = torch.load(self.state.config.load_dir,
                                      map_location=torch.device(self.state.config.device)).to(self.state.config.device)
-        self.target_net.load_state_dict(self.policy_net.state_dict())
         if not self.state.config.test_dqn:
             self.meta.load(open(self.state.config.load_dir.replace('.th', '.meta')))
             self.state.t = self.meta.data.step
