@@ -1,0 +1,16 @@
+{
+  "pipeline_name": "breakout_a2c",
+  "description": "",
+  "env_config": {
+    "env_name": "BreakoutNoFrameskip-v4",
+    "description": ""
+  },
+  "agent_config": {
+    "lr" : 0.0001,
+    "input_dims":[4],
+    "gamma":0.99,
+    "n_actions":4,
+    "gc_freq": 100,
+    "save_freq": 50
+  }
+}
