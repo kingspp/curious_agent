@@ -181,7 +181,7 @@ class Pipeline(object):
             checkpoints.sort()
             logger.debug('Crawling over checkpoints. . .')
             for checkpoint in checkpoints:
-                location = os.path.join(MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT, str(checkpoint), f"e_{checkpoint}")
+                location = os.path.join(MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT, str(checkpoint), f"e_{checkpoint}_videos")
                 if not os.path.exists(location):
                     # build a new test agent and environment
                     logger.debug('Running a test for checkpoint: ' + str(checkpoint))
