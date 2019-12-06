@@ -179,21 +179,21 @@ class Pipeline(object):
             checkpoints.append(int(fs_object))
         if len(checkpoints) > 0:
             checkpoints.sort()
-            logger.info('Crawling over checkpoints. . .')
+            logger.debug('Crawling over checkpoints. . .')
             for checkpoint in checkpoints:
                 location = os.path.join(MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT, str(checkpoint), f"e_{checkpoint}")
                 if not os.path.exists(location):
                     # build a new test agent and environment
-                    logger.info('Running a test for checkpoint: ' + str(checkpoint))
+                    logger.debug('Running a test for checkpoint: ' + str(checkpoint))
                     test_env = type(self.env)(self.config['env_config'], atari_wrapper=True)
                     test_agent = type(self.train_agent)(test_env, self.config['agent_config'])
                     stats_recorder = AtariEnvStatsRecorder(test_agent, test_env, 30)
 
                     stats_recorder.load(location)
                     stats_recorder.record(location)
-                    logger.info('Finished the test for the checkpoint: ' + str(checkpoint))
+                    logger.debug('Finished the test for the checkpoint: ' + str(checkpoint))
                     gc.collect()
-        logger.info('Finished crawling. . .')
+        logger.debug('Finished crawling. . .')
 
     @typechecked
     def execute(self):

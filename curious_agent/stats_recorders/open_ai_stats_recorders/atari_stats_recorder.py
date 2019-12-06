@@ -49,7 +49,7 @@ class AtariEnvStatsRecorder(StatsRecorder):
 
     @typechecked
     def record(self, output: str):
-        logger.info("Started recording. . .")
+        logger.debug("Started recording. . .")
         self.env.env = Monitor(self.env.env, output, force=True)
         rewards = []
         self.env.seed(seed)
@@ -84,7 +84,10 @@ class AtariEnvStatsRecorder(StatsRecorder):
         # logger.info("Releasing the video. . .")
         # video.release()
 
-        logger.info('Run ' + str(self.episodes_number) + ' episodes')
-        logger.info('Mean: ' + str(np.mean(rewards)))
-        logger.info('running time: ' + str(time.time() - start_time))
-        logger.info("Stopped the testing/recording. . .")
+        # logger.debug('Run ' + str(self.episodes_number) + ' episodes')
+        # logger.debug('Mean: ' + str(np.mean(rewards)))
+        # logger.debug('running time: ' + str(time.time() - start_time))
+        logger.debug("Stopped the testing/recording. . .")
+        logger.info(
+            f"episodes tested: {self.episodes_number} | Mean Reward: {np.mean(rewards)} |  ET: {str(time.time() - start_time)} ")
+
