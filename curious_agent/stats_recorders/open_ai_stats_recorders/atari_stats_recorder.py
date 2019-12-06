@@ -95,4 +95,4 @@ class AtariEnvStatsRecorder(StatsRecorder):
         logger.debug("Stopped the testing/recording. . .")
         logger.info(
             f"episodes tested: {stats['episodes_tested']} | Mean Reward: {stats['mean_reward']} |  ET: {stats['elapsed_time']} ")
-        json.dump(stats, open(output + "_stats.json"), indent=2)
+        json.dump(stats, open(output + "_stats.json", 'w'), indent=2)
