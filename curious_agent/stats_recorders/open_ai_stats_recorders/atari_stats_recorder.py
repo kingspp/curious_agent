@@ -50,7 +50,7 @@ class AtariEnvStatsRecorder(StatsRecorder):
     @typechecked
     def record(self, output: str):
         logger.debug("Started recording. . .")
-        self.env.env = Monitor(self.env.env, output, force=True)
+        self.env.env = Monitor(self.env.env, output + "_video", force=True)
         rewards = []
         self.env.seed(seed)
         start_time = time.time()
