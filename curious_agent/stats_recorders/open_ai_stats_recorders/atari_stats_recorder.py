@@ -90,7 +90,7 @@ class AtariEnvStatsRecorder(StatsRecorder):
         stats = {
             "episodes_tested": self.episodes_number,
             "mean_reward": np.mean(rewards),
-            "elapsed_time": str(time.time() - start_time)
+            "elapsed_time": time.time() - start_time
         }
         logger.debug("Stopped the testing/recording. . .")
         logger.info(
