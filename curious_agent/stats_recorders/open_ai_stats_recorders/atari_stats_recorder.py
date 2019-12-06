@@ -10,8 +10,7 @@ import time
 from cv2 import VideoWriter, VideoWriter_fourcc
 from gym.wrappers import Monitor
 import logging
-
-
+import json
 
 from curious_agent.environments.environment import Environment
 # from curious_agent.agents.agent import Agent
@@ -31,6 +30,7 @@ class AtariEnvStatsRecorder(StatsRecorder):
     to produce statistics from an environment given an agent and an environment.
 
     """
+
     @typechecked
     def __init__(self, agent: Agent, env: AtariEnvironment, episodes_number: int):
         """
@@ -87,7 +87,12 @@ class AtariEnvStatsRecorder(StatsRecorder):
         # logger.debug('Run ' + str(self.episodes_number) + ' episodes')
         # logger.debug('Mean: ' + str(np.mean(rewards)))
         # logger.debug('running time: ' + str(time.time() - start_time))
+        stats = {
+            "episodes_tested": self.episodes_number,
+            "mean_reward": np.mean(rewards),
+            "elapsed_time": str(time.time() - start_time)
+        }
         logger.debug("Stopped the testing/recording. . .")
         logger.info(
-            f"episodes tested: {self.episodes_number} | Mean Reward: {np.mean(rewards)} |  ET: {str(time.time() - start_time)} ")
-
+            f"episodes tested: {stats['episodes_tested']} | Mean Reward: {stats['mean_reward']} |  ET: {stats['elapsed_time']} ")
+        json.dump(stats, open(output + "_stats.json"), indent=2)
