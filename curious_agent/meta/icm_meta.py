@@ -33,12 +33,13 @@ class ICMMetaData(object):
     def update_step(self, *args):
         self.step_data = self.step_template(*args)
         if MODULE_CONFIG.BaseConfig.TENSORBOARD_SUMMARIES:
-            self.writer.add_scalar('step/epsilon', self.step_data.epsilon, self.step_data.step)
-            self.writer.add_scalar('step/learning_rate', self.step_data.lr, self.step_data.step)
-            self.writer.add_scalar('step/reward', self.step_data.reward, self.step_data.step)
-            self.writer.add_scalar('step/max_q', self.step_data.max_q, self.step_data.step)
-            self.writer.add_scalar('step/loss', self.step_data.loss, self.step_data.step)
-            self.writer.add_scalar('step/intr_reward', self.step_data.intr_reward, self.step_data.step)
+            # self.writer.add_scalar('step/epsilon', self.step_data.epsilon, self.step_data.step)
+            # self.writer.add_scalar('step/learning_rate', self.step_data.lr, self.step_data.step)
+            # self.writer.add_scalar('step/reward', self.step_data.reward, self.step_data.step)
+            # self.writer.add_scalar('step/max_q', self.step_data.max_q, self.step_data.step)
+            # self.writer.add_scalar('step/loss', self.step_data.loss, self.step_data.step)
+            # self.writer.add_scalar('step/intr_reward', self.step_data.intr_reward, self.step_data.step)
+            pass
 
 
     def update_episode(self, *args):
