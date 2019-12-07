@@ -163,11 +163,9 @@ class Agent_DQN(Agent):
         self.init_game_setting()
         with torch.no_grad():
             if test:
-                if kwargs["state_count"] < 5000:
-                    action = torch.argmax(self.q_network(tensor(observation).float()).detach())
-                    return action.item()
-                else:
-                    return np.random.choice(range(self.state.num_actions))
+                # if kwargs["state_count"] < 5000:
+                action = torch.argmax(self.q_network(tensor(observation).float()).detach())
+                return action.item()
             # Fill up probability list equal for all actions
             self.probability_list.fill(self.state.epsilon / self.state.num_actions)
             # Fetch q from the model prediction
@@ -208,7 +206,7 @@ class Agent_DQN(Agent):
         # Sample random minibatch of transition from replay memory
         minibatch = random.sample(self.replay_memory, self.state.batch_size)
         state_batch, action_batch, reward_batch, next_state_batch, terminal_batch = map(
-            lambda x: Variable(torch.cat(x, 0)), zip(*minibatch))
+                lambda x: Variable(torch.cat(x, 0)), zip(*minibatch))
 
         if self.use_icm:
             # first calculate loss values
@@ -217,8 +215,8 @@ class Agent_DQN(Agent):
             # 3. forward model loss
             onehot_action_batch = tensor([generate_onehot(x, self.state.num_actions) for x in action_batch]).float()
             encoded_next_state_batch, predicted_next_state_batch, predicted_action_batch = self.icm_model([state_batch,
-                                                                                                          next_state_batch,
-                                                                                                          onehot_action_batch])
+                                                                                                           next_state_batch,
+                                                                                                           onehot_action_batch])
             loss_inverse = self.inverse_loss_fn(predicted_action_batch, action_batch)
             loss_forward = self.forward_loss_fn(predicted_next_state_batch, encoded_next_state_batch)
 
@@ -255,7 +253,7 @@ class Agent_DQN(Agent):
         self.optimiser.step()
         return loss.cpu().detach().numpy()
 
-    def train(self, persist: bool=False, run: int = -1, checkpoint: int = -1):
+    def train(self, persist: bool = False, run: int = -1, checkpoint: int = -1):
         """
         Implement your training algorithm here
         """
@@ -266,7 +264,7 @@ class Agent_DQN(Agent):
             start_time = time.time()
             state = self.env.reset()
             state = torch.reshape(tensor(state, dtype=torch.float32), [1, 84, 84, 4]).permute(0, 3, 1, 2).to(
-                self.device)
+                    self.device)
             done = False
             episode_reward = []
             episode_loss = []
@@ -302,7 +300,7 @@ class Agent_DQN(Agent):
 
                 next_state = torch.reshape(tensor(next_state, dtype=torch.float32), [1, 84, 84, 4]).permute(0, 3, 1,
                                                                                                             2).to(
-                    self.device)
+                        self.device)
                 self.push((state, torch.tensor([int(action)]), torch.tensor([reward], device=self.device), next_state,
                            torch.tensor([done], dtype=torch.float32)))
                 episode_reward.append(reward)
