@@ -182,7 +182,7 @@ class Pipeline(object):
             logger.debug('Crawling over checkpoints. . .')
             for checkpoint in checkpoints:
                 location = os.path.join(MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT, str(checkpoint), f"e_{checkpoint}")
-                if not os.path.exists(location):
+                if not os.path.exists(location + "_video"):
                     # build a new test agent and environment
                     logger.debug('Running a test for checkpoint: ' + str(checkpoint))
                     test_env = type(self.env)(self.config['env_config'], atari_wrapper=True)
