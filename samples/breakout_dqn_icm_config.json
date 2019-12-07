@@ -6,6 +6,7 @@
     "description": ""
   },
   "agent_config": {
+    "device": "cuda",
     "env_name": null,
     "train_dqn": false,
     "test_dqn": false,
