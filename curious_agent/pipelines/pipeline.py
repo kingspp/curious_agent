@@ -225,9 +225,9 @@ class Pipeline(object):
             if not MODULE_CONFIG.BaseConfig.DRY_RUN:
                 # create file structure for TensorBoardX logging
                 os.system(
-                    f"tensorboard --logdir {MODULE_CONFIG.BaseConfig.PATH_GRAPHS} --port {MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT} > {MODULE_CONFIG.BaseConfig.PATH_LOG}/tb.log 2>&1 &")
+                    f"tensorboard --logdir {MODULE_CONFIG.BaseConfig.PATH_GRAPHS} --host {MODULE_CONFIG.BaseConfig.TENSORBOARD_HOST} --port {MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT} > {MODULE_CONFIG.BaseConfig.PATH_LOG}/tb.log 2>&1 &")
                 logger.info(
-                    f"Starting tensorboard @ http://localhost:{MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT}/#scalars")
+                    f"Starting tensorboard @ http://{MODULE_CONFIG.BaseConfig.TENSORBOARD_HOST}:{MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT}/#scalars")
             # start the training process (blocking)
             self.train_agent.train()
             if self.probing_enabled:
