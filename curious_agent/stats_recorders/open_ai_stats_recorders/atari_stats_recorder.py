@@ -50,7 +50,9 @@ class AtariEnvStatsRecorder(StatsRecorder):
     @typechecked
     def record(self, output: str):
         logger.debug("Started recording. . .")
-        self.env.env = Monitor(self.env.env, output + "_video", force=True)
+        def return_true(idx):
+            return True
+        self.env.env = Monitor(self.env.env, output + "_video", force=True, video_callable=return_true, mode='evaluation')
         rewards = []
         self.env.seed(seed)
         start_time = time.time()
@@ -73,7 +75,7 @@ class AtariEnvStatsRecorder(StatsRecorder):
 
             rewards.append(episode_reward)
 
-        self.env.env.close()
+        # self.env.env.close()
 
         # turn the frames list into a video
         # four_cc = VideoWriter_fourcc(*'MP42')
