@@ -86,7 +86,9 @@ class Agent(metaclass=ABCMeta):
         self.state._models = {}
         for k, v in self.__dict__.items():
             if isinstance(v, Model):
-                self.state._models[k if v.name == "" else v.name] = ref(v)()
+                v.name = k if v.name == "" else v.name
+                self.state._models[v.name] = ref(v)()
+
 
     @typechecked
     def save(self, i_episode):
@@ -139,5 +141,6 @@ class Agent(metaclass=ABCMeta):
         logger.info("Agent State loaded successfully")
         for k, model in self.state._models.items():
             model.load(file_name_with_path=os.path.join(f'{file_name_with_path}_{model.name}.th'))
+            logger.info(f'{file_name_with_path}_{model.name}.th loaded')
             logger.info(f"{model.name} model loaded successfully")
         self.state = Munch(json.load(open(file_name_with_path + ".meta")))
