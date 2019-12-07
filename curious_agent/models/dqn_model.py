@@ -12,9 +12,9 @@ Description:
 
 import torch.nn as nn
 import torch.nn.functional as F
+from curious_agent.models import Model
 
-
-class DQN(nn.Module):
+class DQN(Model):
     """Initialize a deep Q-learning network
 
     Hints:
@@ -23,13 +23,13 @@ class DQN(nn.Module):
     https://storage.googleapis.com/deepmind-data/assets/papers/DeepMindNature14236Paper.pdf
     """
 
-    def __init__(self):
+    def __init__(self, env, args):
         """
         You can add additional arguments as you need.
         In the constructor we instantiate modules and assign them as
         member variables.
         """
-        super(DQN, self).__init__()
+        super(DQN, self).__init__(env=env, args=args)
         self.conv1 = nn.Conv2d(4, 32, 8, 4)
         self.conv2 = nn.Conv2d(32, 64, 4, 2)
         self.conv3 = nn.Conv2d(64, 64, 3, 1)

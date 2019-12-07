@@ -33,7 +33,7 @@ class Agent(metaclass=ABCMeta):
         self.meta = DefaultMetaData
 
     @abstractmethod
-    def take_action(self, observation: np.array, test: bool = True):
+    def take_action(self, observation: np.array, test: bool = True, **args):
         """Method that returns predicted action of the agent
 
         There is an idiomatic restriction that should go into the implementation of this function: the pre-processing
