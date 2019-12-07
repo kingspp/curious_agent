@@ -22,6 +22,8 @@ class Model(nn.Module, metaclass=ABCMeta):
         """
         super(Model, self).__init__()
         self.name = name
+        self.env=env
+        self.args = args
 
     @abstractmethod
     def forward(self, inp):
