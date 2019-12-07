@@ -73,6 +73,7 @@ class DQNAgentICM(Agent):
                             })
         self.reward_list = deque(maxlen=agent_config.window)
         self.intrinsic_reward_list = deque(maxlen=agent_config.window)
+        self.episodic_intrinsic_reward_list = deque(maxlen=agent_config.window)
         self.max_q_list = deque(maxlen=agent_config.window)
         self.loss_list = deque(maxlen=agent_config.window)
         self.probability_list = np.zeros(env.action_space.n, np.float32)
@@ -186,7 +187,7 @@ class DQNAgentICM(Agent):
 
         intrinsic_reward = self.eta * loss_forward
         discounted_reward = self.lambda_val * (intrinsic_reward + batch_reward)
-        self.intrinsic_reward_list.append(intrinsic_reward.detach().cpu().numpy())
+        self.episodic_intrinsic_reward_list.append(intrinsic_reward.detach().cpu().numpy())
 
         # Compute Huber loss
         if self.state.config.use_pri_buffer:
@@ -301,7 +302,8 @@ class DQNAgentICM(Agent):
                 self.meta.update_step(self.state.t, self.state.cur_eps, self.reward_list[-1],
                                       self.reward_list[-1],
                                       self.loss_list[-1], self.state.config.lr,
-                                      self.intrinsic_reward_list[-1] if len(self.intrinsic_reward_list) > 0 else 0)
+                                      self.episodic_intrinsic_reward_list[-1] if len(
+                                          self.episodic_intrinsic_reward_list) > 0 else 0)
 
                 # Increment step and Episode Length
                 self.state.t += 1
@@ -315,6 +317,10 @@ class DQNAgentICM(Agent):
                     loss = self.optimize_model()
                     self.loss_list[-1] += loss
             self.loss_list[-1] /= self.state.ep_len
+
+            # Collecting episode level intrinsic reward
+            self.intrinsic_reward_list.append(sum(self.episodic_intrinsic_reward_list))
+            self.episodic_intrinsic_reward_list.clear()
 
             # Update meta
             self.meta.update_episode(i_episode, self.state.t, time.time() - start_time, time.time() - train_start,
