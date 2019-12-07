@@ -40,7 +40,7 @@ class CNNModel(Model):
             nn.Linear(7 * 7 * 64, 512),
             nn.ReLU(),
             nn.Linear(512, self.num_actions),
-            nn.Softmax()
+            nn.Softmax(dim=1)
         )
 
     def forward(self, x):

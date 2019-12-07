@@ -27,7 +27,7 @@ from curious_agent.util import pipeline_config_loader
 # Load Configuration
 config = pipeline_config_loader(sys.argv[1])
 
-torch.set_default_tensor_type('torch.cuda.FloatTensor' if config['agent_config'].device == "cuda" else 'torch.FloatTensor')
+torch.set_default_tensor_type('torch.cuda.FloatTensor' if torch.cuda.is_available() else 'torch.FloatTensor')
 
 # Create Environment
 env = AtariEnvironment(config['env_config'], atari_wrapper=True)
