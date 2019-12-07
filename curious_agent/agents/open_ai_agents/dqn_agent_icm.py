@@ -71,6 +71,8 @@ class DQNAgentICM(Agent):
                             "mode": None,
                             "position": 0,
                             })
+
+        self.state.config.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.reward_list = deque(maxlen=agent_config.window)
         self.intrinsic_reward_list = deque(maxlen=agent_config.window)
         self.episodic_intrinsic_reward_list = deque(maxlen=agent_config.window)
@@ -303,7 +305,7 @@ class DQNAgentICM(Agent):
                                       self.reward_list[-1],
                                       self.loss_list[-1], self.state.config.lr,
                                       self.episodic_intrinsic_reward_list[-1] if len(
-                                          self.episodic_intrinsic_reward_list) > 0 else 0)
+                                              self.episodic_intrinsic_reward_list) > 0 else 0)
 
                 # Increment step and Episode Length
                 self.state.t += 1

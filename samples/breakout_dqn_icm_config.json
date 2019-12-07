@@ -25,7 +25,6 @@
     "save_freq": 100,
     "disp_freq": 100,
     "optimizer_eps": 0.001,
-    "device": "cpu",
     "use_pri_buffer": false,
     "pri_beta_start": 0.4,
     "pri_beta_decay": 100000,
