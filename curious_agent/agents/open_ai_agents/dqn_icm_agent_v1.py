@@ -164,7 +164,8 @@ class Agent_DQN(Agent):
         with torch.no_grad():
             if test:
                 # if kwargs["state_count"] < 5000:
-                action = torch.argmax(self.q_network(tensor(observation).float()).detach())
+                action = torch.argmax(
+                    self.q_network(tensor(observation).unsqueeze(0).permute(0, 3, 1, 2).float()).detach())
                 return action.item()
             # Fill up probability list equal for all actions
             self.probability_list.fill(self.state.epsilon / self.state.num_actions)
