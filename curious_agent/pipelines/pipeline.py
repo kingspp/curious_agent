@@ -179,21 +179,21 @@ class Pipeline(object):
             checkpoints.append(int(fs_object))
         if len(checkpoints) > 0:
             checkpoints.sort()
-            logger.info('Crawling over checkpoints. . .')
+            logger.debug('Crawling over checkpoints. . .')
             for checkpoint in checkpoints:
                 location = os.path.join(MODULE_CONFIG.BaseConfig.PATH_CHECKPOINT, str(checkpoint), f"e_{checkpoint}")
-                if not os.path.exists(location):
+                if not os.path.exists(location + "_video"):
                     # build a new test agent and environment
-                    logger.info('Running a test for checkpoint: ' + str(checkpoint))
+                    logger.debug('Running a test for checkpoint: ' + str(checkpoint))
                     test_env = type(self.env)(self.config['env_config'], atari_wrapper=True)
                     test_agent = type(self.train_agent)(test_env, self.config['agent_config'])
                     stats_recorder = AtariEnvStatsRecorder(test_agent, test_env, 30)
 
                     stats_recorder.load(location)
                     stats_recorder.record(location)
-                    logger.info('Finished the test for the checkpoint: ' + str(checkpoint))
+                    logger.debug('Finished the test for the checkpoint: ' + str(checkpoint))
                     gc.collect()
-        logger.info('Finished crawling. . .')
+        logger.debug('Finished crawling. . .')
 
     @typechecked
     def execute(self):
@@ -225,9 +225,9 @@ class Pipeline(object):
             if not MODULE_CONFIG.BaseConfig.DRY_RUN:
                 # create file structure for TensorBoardX logging
                 os.system(
-                    f"tensorboard --logdir {MODULE_CONFIG.BaseConfig.PATH_GRAPHS} --port {MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT} > {MODULE_CONFIG.BaseConfig.PATH_LOG}/tb.log 2>&1 &")
+                    f"tensorboard --logdir {MODULE_CONFIG.BaseConfig.PATH_GRAPHS} --host {MODULE_CONFIG.BaseConfig.TENSORBOARD_HOST} --port {MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT} > {MODULE_CONFIG.BaseConfig.PATH_LOG}/tb.log 2>&1 &")
                 logger.info(
-                    f"Starting tensorboard @ http://localhost:{MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT}/#scalars")
+                    f"Starting tensorboard @ http://{MODULE_CONFIG.BaseConfig.TENSORBOARD_HOST}:{MODULE_CONFIG.BaseConfig.TENSORBOARD_PORT}/#scalars")
             # start the training process (blocking)
             self.train_agent.train(False)
             if self.probing_enabled:

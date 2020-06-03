@@ -10,8 +10,7 @@ import time
 from cv2 import VideoWriter, VideoWriter_fourcc
 from gym.wrappers import Monitor
 import logging
-
-
+import json
 
 from curious_agent.environments.environment import Environment
 # from curious_agent.agents.agent import Agent
@@ -31,6 +30,7 @@ class AtariEnvStatsRecorder(StatsRecorder):
     to produce statistics from an environment given an agent and an environment.
 
     """
+
     @typechecked
     def __init__(self, agent: Agent, env: AtariEnvironment, episodes_number: int):
         """
@@ -49,8 +49,10 @@ class AtariEnvStatsRecorder(StatsRecorder):
 
     @typechecked
     def record(self, output: str):
-        logger.info("Started recording. . .")
-        self.env.env = Monitor(self.env.env, output, force=True)
+        logger.debug("Started recording. . .")
+        def return_true(idx):
+            return True
+        self.env.env = Monitor(self.env.env, output + "_video", force=True, video_callable=return_true, mode='evaluation')
         rewards = []
         self.env.seed(seed)
         start_time = time.time()
@@ -73,7 +75,7 @@ class AtariEnvStatsRecorder(StatsRecorder):
 
             rewards.append(episode_reward)
 
-        self.env.env.close()
+        # self.env.env.close()
 
         # turn the frames list into a video
         # four_cc = VideoWriter_fourcc(*'MP42')
@@ -84,7 +86,15 @@ class AtariEnvStatsRecorder(StatsRecorder):
         # logger.info("Releasing the video. . .")
         # video.release()
 
-        logger.info('Run ' + str(self.episodes_number) + ' episodes')
-        logger.info('Mean: ' + str(np.mean(rewards)))
-        logger.info('running time: ' + str(time.time() - start_time))
-        logger.info("Stopped the testing/recording. . .")
+        # logger.debug('Run ' + str(self.episodes_number) + ' episodes')
+        # logger.debug('Mean: ' + str(np.mean(rewards)))
+        # logger.debug('running time: ' + str(time.time() - start_time))
+        stats = {
+            "episodes_tested": self.episodes_number,
+            "mean_reward": np.mean(rewards),
+            "elapsed_time": time.time() - start_time
+        }
+        logger.debug("Stopped the testing/recording. . .")
+        logger.info(
+            f"episodes tested: {stats['episodes_tested']} | Mean Reward: {stats['mean_reward']} |  ET: {stats['elapsed_time']} ")
+        json.dump(stats, open(output + "_stats.json", 'w'), indent=2)

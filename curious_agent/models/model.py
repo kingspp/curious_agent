@@ -22,6 +22,7 @@ class Model(nn.Module, metaclass=ABCMeta):
         """
         super(Model, self).__init__()
         self.name = name
+        self.env=env
         self.args = args
 
     @abstractmethod
@@ -47,7 +48,7 @@ class Model(nn.Module, metaclass=ABCMeta):
         Load Model
         :return:
         """
-        logger.info(f"Restoring {self.name} model from {self.args.load_dir} . . . ")
+        logger.info(f"Restoring {self.name} model from {file_name_with_path} . . . ")
         model = torch.load(file_name_with_path,
                            map_location=torch.device(device)).to(device) if device != "" else None
         logger.info(f"{self.name} Model successfully restored.")

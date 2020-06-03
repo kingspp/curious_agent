@@ -1,0 +1,42 @@
+{
+  "pipeline_name": "breakout_dqn_icm_v1",
+  "description": "",
+  "env_config": {
+    "env_name": "BreakoutNoFrameskip-v4",
+    "description": ""
+  },
+  "agent_config": {
+    "env_name": null,
+    "train_pg": false,
+    "train_dqn": false,
+    "test_pg": false,
+    "test_dqn": false,
+    "video_dir": null,
+    "do_render": false,
+    "batch_size": 32,
+    "run_name": "icm_dqn",
+    "model_save_path": "trained_models",
+    "save_freq": 500,
+    "disp_freq": 100,
+    "log_path": "train_log.out",
+    "tensorboard_summary_path": "tensorboard_summary",
+    "model_test_path": "/Users/badgod/Downloads/dqn_model_23500.pt",
+    "metrics_capture_window": 100,
+    "replay_size": 10000,
+    "start_to_learn": 5000,
+    "total_num_steps": 50000000.0,
+    "learning_rate": 0.0001,
+    "gamma": 0.99,
+    "initial_epsilon": 1.0,
+    "final_epsilon": 0.005,
+    "steps_to_explore": 1000000,
+    "network_update_interval": 5000,
+    "episodes": 50000000,
+    "network_train_interval": 10,
+    "ddqn": false,
+    "use_icm": true,
+    "beta": 0.2,
+    "lambda_val": 0.95,
+    "eta": 0.01
+  }
+}

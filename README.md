@@ -13,6 +13,15 @@ large-scale-curiosity implementation and improvements-
 2. PyTorch
 3. Open AI
 
+```bash
+
+# Linux
+sudo apt-get install ffmpeg libav-tools
+
+# Mac
+brew install ffmpeg libav-tools
+```
+
 #### Guidelines
 
 1. Do not use ```print``` function. Instead use
