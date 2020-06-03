@@ -1,0 +1,19 @@
+{
+  "base_config": {
+    "experiment_name": "prathyush",
+    "base_dir": "",
+    "experiments_meta_name": "experiments.meta",
+    "path": {
+      "logs": "logs",
+      "checkpoint": "checkpoint",
+      "graphs": "graphs",
+      "configs": "configs"
+    },
+    "log_level": "DEBUG",
+    "python_optimise": 1,
+    "dry_run": false,
+    "tensorboard_summaries": true,
+    "tensorboard_host": "0.0.0.0",
+    "tensorboard_port": 7078
+  }
+}

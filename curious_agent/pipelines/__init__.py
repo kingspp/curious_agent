@@ -1,0 +1,1 @@
+from curious_agent.pipelines.pipeline import Pipeline

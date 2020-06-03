@@ -93,3 +93,7 @@ sphinx-docs/
 _build/
 /cover/
 *.bak
+
+experiments
+
+.vscode/*

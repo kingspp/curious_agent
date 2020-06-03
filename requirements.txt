@@ -17,8 +17,11 @@ munch
 # Module Dependencies
 opencv-python-headless
 gym==0.10.4
+# gym
 gym[atari]
 humanize
 tensorboardX
 cv2
 numpy
+torch
+torchvision

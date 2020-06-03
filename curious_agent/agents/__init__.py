@@ -1,0 +1,1 @@
+from curious_agent.agents.agent import Agent
